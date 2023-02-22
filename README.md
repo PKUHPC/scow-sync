@@ -7,6 +7,7 @@ usage: test.py [-h] [-a ADDRESS] [-u USER] [-p PASSWORD] [-s SOURCE] [-d DESTINA
 file transfer system for SCOW
 
 optional arguments:
+
   -h, --help            show this help message and exit
 
   -a ADDRESS, --address ADDRESS
@@ -19,6 +20,6 @@ optional arguments:
 
   -s SOURCE, --source SOURCE
                         path to the source file or directory
-                        
+
   -d DESTINATION, --destination DESTINATION
                         path to the destination directory
