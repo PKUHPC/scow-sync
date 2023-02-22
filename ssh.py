@@ -25,7 +25,7 @@ class SSH:
         self.ssh.connect(address, username=user, password=password)
         return 
     
-    def ssh_exe_cmd(self,cmd):
+    def ssh_exe_cmd(self, cmd):
         [stdin, stdout, stderr] = self.ssh.exec_command(cmd)
         string_error = stderr.read().decode('utf-8')
         if string_error:

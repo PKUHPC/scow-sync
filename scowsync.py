@@ -3,6 +3,7 @@ import queue
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
 from filequeue import FileQueue
+from ssh import SSH
 
 class ScowSync:
 
@@ -45,10 +46,10 @@ class ScowSync:
         while(not self.file_queue.empty()):
             entity_file = self.file_queue.get()
             if entity_file.isdir:
-                cmd = 'mkdir -p {}'.format(os.path.join(self.destinationpath, entity_file.filename))
-                result = os.system(cmd)
-                if result != 0:
-                    raise Exception('create directory {} failed'.format(entity_file.filename)) 
+                ssh = SSH(self.address, self.user, self.sshpassword)
+                string_cmd = 'mkdir -p {}'.format(os.path.join(self.destinationpath, os.path.join(entity_file.fatherpath, entity_file.filename)))
+                print("ssh command: {}".format(string_cmd))
+                ssh.ssh_exe_cmd(cmd=string_cmd)
             else:
                 self.thread_pool.submit(self.__transfer_file, os.path.join(entity_file.fatherpath, entity_file.filename))
         self.thread_pool.shutdown()
