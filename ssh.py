@@ -22,7 +22,8 @@ class SSH:
     def login(self, address, user, password):
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.ssh.connect(address, username=user, password=password)
-
+        return 
+    
     def ssh_exe_cmd(self,cmd):
         [stdin, stdout, stderr] = self.ssh.exec_command(cmd)
         string_error = stderr.read().decode('utf-8')
