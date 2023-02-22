@@ -37,12 +37,12 @@ class ScowSync:
     def __transfer_file(self, filepath):
         print('transfering file: {}'.format(filepath))
         if(self.__is_compressed(filepath)):
-            cmd = 'sshpass -p {} rsync -a {} {}@{}:{} --partial --inplace --progress'.format(self.sshpassword, filepath, self.user, self.address, self.destinationpath)
+            cmd = 'sshpass -p {} rsync -a {} {}@{}:{} --partial --inplace'.format(self.sshpassword, filepath, self.user, self.address, self.destinationpath)
             result = os.system(cmd)
             if result != 0:
                 raise Exception('transfer {} failed'.format(filepath))
         else:
-            cmd = 'sshpass -p {} rsync -az {} {}@{}:{} --partial --inplace --progress'.format(self.sshpassword, filepath, self.user, self.address, self.destinationpath)
+            cmd = 'sshpass -p {} rsync -az {} {}@{}:{} --partial --inplace'.format(self.sshpassword, filepath, self.user, self.address, self.destinationpath)
             result = os.system(cmd)
             if result != 0:
                 raise Exception('transfer {} failed'.format(filepath))
