@@ -11,6 +11,7 @@ class SSH:
         self.address = address
         self.user = user
         self.password = password
+        self.__login(address, user, password)
 
     def __new__(cls, *args, **kwargs):
         if not hasattr(SSH, "_instance"):
@@ -19,7 +20,7 @@ class SSH:
                     SSH._instance = object.__new__(cls)  
         return SSH._instance
     
-    def login(self, address, user, password):
+    def __login(self, address, user, password):
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.ssh.connect(address, username=user, password=password)
         return 
