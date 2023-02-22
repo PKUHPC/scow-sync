@@ -2,7 +2,7 @@
 A file transfer system backend on SCOW
 
 ## usage
-usage: test.py [-h] [-a ADDRESS] [-u USER] [-p PASSWORD] [-s SOURCE] [-d DESTINATION]
+usage: scow-sync.py [-h] [-a ADDRESS] [-u USER] [-p PASSWORD] [-s SOURCE] [-d DESTINATION]
 
 file transfer system for SCOW
 
