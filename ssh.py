@@ -1,10 +1,24 @@
 import paramiko
+import threading
 
+# 使用单例模式
 class SSH:
     
-    def __init__(self):
-        self.ssh = paramiko.SSHClient()
+    _instance_lock = threading.Lock()
 
+    def __init__(self, address, user, password):
+        self.ssh = paramiko.SSHClient()
+        self.address = address
+        self.user = user
+        self.password = password
+
+    def __new__(cls, *args, **kwargs):
+        if not hasattr(SSH, "_instance"):
+            with SSH._instance_lock:
+                if not hasattr(SSH, "_instance"):
+                    SSH._instance = object.__new__(cls)  
+        return SSH._instance
+    
     def login(self, address, user, password):
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.ssh.connect(address, username=user, password=password)
@@ -15,5 +29,4 @@ class SSH:
         if string_error:
             raise Exception(string_error)
         return 
-    
     
