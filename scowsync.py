@@ -48,7 +48,6 @@ class ScowSync:
             if entity_file.isdir:
                 ssh = SSH(self.address, self.user, self.sshpassword)
                 string_cmd = 'mkdir -p {}'.format(os.path.join(self.destinationpath, os.path.join(entity_file.fatherpath, entity_file.filename)))
-                print("ssh command: {}".format(string_cmd))
                 ssh.ssh_exe_cmd(cmd=string_cmd)
             else:
                 self.thread_pool.submit(self.__transfer_file, os.path.join(entity_file.fatherpath, entity_file.filename))
