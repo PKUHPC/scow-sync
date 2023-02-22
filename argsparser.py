@@ -1,0 +1,47 @@
+from argparse import ArgumentParser
+
+
+class ArgsParser:
+
+    def __init__(self):
+        self.parser = ArgumentParser(description='file transfer system for SCOW')
+
+    def get_args_parser(self) -> ArgumentParser:
+
+        # address
+        self.parser.add_argument(
+            '-a', '--address',
+            type=str,
+            default='localhost',
+            help='address of the server'
+        )
+        
+        # user  
+        self.parser.add_argument(
+            '-u', '--user',
+            type=str,
+            help='username for logging in to the server'
+        )
+
+        # password
+        self.parser.add_argument(
+            '-p', '--password',
+            type=str,
+            help='password for logging in to the server'
+        )
+
+        # source path
+        self.parser.add_argument(
+            '-s', '--source',
+            type=str,
+            help='path to the source file or directory'
+        )
+
+        # directory path
+        self.parser.add_argument(
+            '-d', '--destination',
+            type=str,
+            help='path to the destination directory'
+        )
+
+        return self.parser
