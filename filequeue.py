@@ -17,8 +17,14 @@ class FileQueue:
             self.file_queue.put(self.EntityFile(filename, False, fatherpath))
         else:
             self.file_queue.put(self.EntityFile(filename, True, fatherpath))
-            for file in os.path.listdir(sourcepath):
-                self.add_to_queue(os.path.join(sourcepath, file), os.path.join(fatherpath, filename), file)
+            for file in os.listdir(sourcepath):
+                self.__add_file_to_queue(os.path.join(sourcepath, file), os.path.join(fatherpath, filename), file)
+    
+    def empty(self):
+        return self.file_queue.empty()
+    
+    def get(self):
+        return self.file_queue.get()
 
     def add_to_queue(self, sourcepath) -> int:
         self.__add_file_to_queue(sourcepath, "", os.path.basename(sourcepath))
