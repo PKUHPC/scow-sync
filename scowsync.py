@@ -4,6 +4,7 @@ Transfer files from local to remote server on SCOW
 import os
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
+from subprocess import Popen, PIPE
 from filequeue import FileQueue, EntityFile
 from ssh import SSH
 
@@ -36,22 +37,21 @@ class ScowSync:
     # transfer single file
     def __transfer_file(self, filepath):
         print(f'transfering file: {filepath}')
+        cmd = None
+        src = os.path.join(os.path.split(self.sourcepath)[0], filepath)
         if self.__is_compressed(filepath):
-            cmd = f'sshpass -p {self.sshpassword} rsync -a \
-                    {os.path.join(os.path.split(self.sourcepath)[0], filepath)} \
-                    {self.user}@{self.address}:{os.path.join(self.destinationpath, filepath)} \
+            cmd = f'sshpass -p {self.sshpassword} rsync -a --progress \
+                    {src} {self.user}@{self.address}:{os.path.join(self.destinationpath, filepath)} \
                     --partial --inplace'
-            result = os.system(cmd)
-            if result != 0:
-                raise SystemError(f'transfer {filepath} failed')
         else:
-            cmd = f'sshpass -p {self.sshpassword} rsync -az \
-                    {os.path.join(os.path.split(self.sourcepath)[0], filepath)} \
-                    {self.user}@{self.address}:{os.path.join(self.destinationpath, filepath)} \
+            cmd = f'sshpass -p {self.sshpassword} rsync -az --progress \
+                    {src} {self.user}@{self.address}:{os.path.join(self.destinationpath, filepath)} \
                     --partial --inplace'
-            result = os.system(cmd)
-            if result != 0:
-                raise SystemError(f'transfer {filepath} failed')
+        with Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True) as popen:
+            while popen.poll() is None:
+                line = popen.stdout.readline()
+                print(f'transfering file: {filepath} {line.strip()}')
+        return
 
     def transfer_files(self):
         '''
