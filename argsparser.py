@@ -4,7 +4,8 @@ from argparse import ArgumentParser
 class ArgsParser:
 
     def __init__(self):
-        self.parser = ArgumentParser(description='file transfer system for SCOW')
+        self.parser = ArgumentParser(
+            description='file transfer system for SCOW')
 
     def get_args_parser(self) -> ArgumentParser:
 
@@ -15,8 +16,8 @@ class ArgsParser:
             default='localhost',
             help='address of the server'
         )
-        
-        # user  
+
+        # user
         self.parser.add_argument(
             '-u', '--user',
             type=str,

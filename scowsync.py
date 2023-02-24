@@ -2,7 +2,7 @@ import os
 import queue
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
-from filequeue import FileQueue
+from filequeue import FileQueue, EntityFile
 from ssh import SSH
 
 class ScowSync:
@@ -29,12 +29,12 @@ class ScowSync:
     def __transfer_file(self, filepath):
         print('transfering file: {}'.format(filepath))
         if(self.__is_compressed(filepath)):
-            cmd = 'sshpass -p {} rsync -a {} {}@{}:{} --partial --inplace'.format(self.sshpassword, filepath, self.user, self.address, os.path.join(self.destinationpath, filepath))
+            cmd = 'sshpass -p {} rsync -a {} {}@{}:{} --partial --inplace'.format(self.sshpassword, os.path.join(os.path.split(self.sourcepath)[0], filepath), self.user, self.address, os.path.join(self.destinationpath, filepath))
             result = os.system(cmd)
             if result != 0:
                 raise Exception('transfer {} failed'.format(filepath))
         else:
-            cmd = 'sshpass -p {} rsync -az {} {}@{}:{} --partial --inplace'.format(self.sshpassword, filepath, self.user, self.address, os.path.join(self.destinationpath, filepath))
+            cmd = 'sshpass -p {} rsync -az {} {}@{}:{} --partial --inplace'.format(self.sshpassword, os.path.join(os.path.split(self.sourcepath)[0], filepath), self.user, self.address, os.path.join(self.destinationpath, filepath))
             result = os.system(cmd)
             if result != 0:
                 raise Exception('transfer {} failed'.format(filepath))
@@ -44,11 +44,11 @@ class ScowSync:
         thread_num = min(self.file_queue.add_to_queue(self.sourcepath), 2*cpu_count()+1)
         self.thread_pool = ThreadPoolExecutor(thread_num, thread_name_prefix='scowsync')
         while(not self.file_queue.empty()):
-            entity_file = self.file_queue.get()
+            entity_file:EntityFile = self.file_queue.get()
             if entity_file.isdir:
                 ssh = SSH(self.address, self.user, self.sshpassword)
-                string_cmd = 'mkdir -p {}'.format(os.path.join(self.destinationpath, os.path.join(entity_file.fatherpath, entity_file.filename)))
+                string_cmd = 'mkdir -p {}'.format(os.path.join(self.destinationpath, entity_file.subpath))
                 ssh.ssh_exe_cmd(cmd=string_cmd)
             else:
-                self.thread_pool.submit(self.__transfer_file, os.path.join(entity_file.fatherpath, entity_file.filename))
+                self.thread_pool.submit(self.__transfer_file, entity_file.subpath)
         self.thread_pool.shutdown()
