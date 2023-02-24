@@ -1,13 +1,24 @@
+'''
+Parse command line arguments
+'''
 from argparse import ArgumentParser
 
 
 class ArgsParser:
+    '''
+    Parse command line arguments
+    '''
 
     def __init__(self):
         self.parser = ArgumentParser(
-            description='file transfer system for SCOW')
+            description='file transfer system for SCOW'
+        )
 
     def get_args_parser(self) -> ArgumentParser:
+        '''
+        Get the argument parser
+        @return: the argument parser
+        '''
 
         # address
         self.parser.add_argument(

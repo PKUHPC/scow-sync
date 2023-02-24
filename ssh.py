@@ -1,11 +1,13 @@
-import paramiko
+'''
+Ssh connection and execute commands with singleton pattern
+'''
 import threading
-
-# 使用单例模式
-
+import paramiko
 
 class SSH:
-
+    '''
+    Ssh connection and execute commands
+    '''
     _instance_lock = threading.Lock()
 
     def __init__(self, address, user, password):
@@ -25,11 +27,12 @@ class SSH:
     def __login(self, address, user, password):
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.ssh.connect(address, username=user, password=password)
-        return
 
     def ssh_exe_cmd(self, cmd):
-        [stdin, stdout, stderr] = self.ssh.exec_command(cmd)
-        string_error = stderr.read().decode('utf-8')
-        if string_error:
-            raise Exception(string_error)
-        return
+        '''
+        Execute command on the server
+        '''
+        try:
+            self.ssh.exec_command(cmd)
+        except SystemError as exception:
+            print(f"ssh execute error:{cmd}, exception:{str(exception)}")

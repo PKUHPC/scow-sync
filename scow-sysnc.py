@@ -1,3 +1,6 @@
+'''
+Code entry to run the scow-sync
+'''
 from scowsync import ScowSync
 from argsparser import ArgsParser
 
@@ -7,3 +10,4 @@ if __name__ == '__main__':
     scow = ScowSync(args.address, args.user, args.password,
                     args.source, args.destination)
     scow.transfer_files()
+    

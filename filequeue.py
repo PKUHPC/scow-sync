@@ -1,14 +1,21 @@
+'''
+Add files to queue and get files from queue
+'''
 import queue
-
 import os
 
 class EntityFile:
+    '''
+    Element of file queue
+    '''
     def __init__(self, isdir, subpath):
         self.isdir = isdir
         self.subpath = subpath
 
 class FileQueue:
-
+    '''
+    Queue of files
+    '''
     def __init__(self):
         self.file_queue = queue.Queue(maxsize=0)  # maxsize=0则队列大小无限制
 
@@ -24,11 +31,22 @@ class FileQueue:
                 )
 
     def empty(self):
+        '''
+        Return True if queue is empty
+        '''
         return self.file_queue.empty()
 
     def get(self):
+        '''
+        Get file from queue
+        '''
         return self.file_queue.get()
 
     def add_to_queue(self, sourcepath) -> int:
+        '''
+        Add files to queue in recursive form
+        @param sourcepath: source path
+        @return: size of queue
+        '''
         self.__add_file_to_queue(sourcepath, os.path.basename(sourcepath))
         return self.file_queue.qsize()
