@@ -6,7 +6,7 @@ class FileQueue:
         def __init__(self, filename, isdir, fatherpath):
             self.filename = filename
             self.isdir = isdir
-            self.fatherpath = fatherpath
+            self.fatherpath = fatherpath # 在soucepath之下的上面一层目录的文件名
 
 
     def __init__(self):
