@@ -42,7 +42,7 @@ class FileQueue:
         '''
         return self.file_queue.get()
 
-    def add_to_queue(self, sourcepath) -> int:
+    def add_all_to_queue(self, sourcepath) -> int:
         '''
         Add files to queue in recursive form
         @param sourcepath: source path

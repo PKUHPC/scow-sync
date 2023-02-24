@@ -57,7 +57,7 @@ class ScowSync:
         '''
         run to transfer files
         '''
-        thread_num = min(self.file_queue.add_to_queue(
+        thread_num = min(self.file_queue.add_all_to_queue(
             self.sourcepath),
             2*cpu_count()+1
         )
