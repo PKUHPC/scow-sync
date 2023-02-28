@@ -14,12 +14,13 @@ class ScowSync:
     Transfer files from local to remote server
     '''
 
-    def __init__(self, address, user, sshpassword, sourcepath, destinationpath):
+    def __init__(self, address, user, sshpassword, sourcepath, destinationpath, max_depth):
         self.address = address
         self.user = user
         self.sshpassword = sshpassword
         self.sourcepath = sourcepath
         self.destinationpath = destinationpath
+        self.max_depth = max_depth
         self.compress_list = ['.tar', '.zip', '.rar', '.7z', '.gz',
                               '.bz2', '.xz', '.tgz', 'tbz', 'tb2', 'taz', 'tlz', 'txz'
                               ]
@@ -27,6 +28,7 @@ class ScowSync:
         self.thread_pool = None
 
     # compress uncompressed files
+
     def __is_compressed(self, filename) -> bool:
         if '.' in filename:
             ext = filename.split('.')[-1]
@@ -53,12 +55,26 @@ class ScowSync:
                 print(f'transfering file: {filepath} {line.strip()}')
         return
 
+    # transfer directory
+    def __transfer_dir(self, dirpath):
+        print(f'transfering dir: {dirpath}')
+        src = os.path.join(os.path.split(self.sourcepath)[0], dirpath)
+        dst = os.path.join(self.destinationpath, os.path.split(dirpath)[0])
+        cmd = f'sshpass -p {self.sshpassword} rsync -az --progress \
+                {src} {self.user}@{self.address}:{dst} \
+                --partial --inplace'
+
+        with Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True) as popen:
+            while popen.poll() is None:
+                line = popen.stdout.readline()
+                print(f'transfering dir: {dirpath} {line.strip()}')
+
     def transfer_files(self):
         '''
         run to transfer files
         '''
         thread_num = min(self.file_queue.add_all_to_queue(
-            self.sourcepath),
+            self.sourcepath, self.max_depth),
             2*cpu_count()+1
         )
 
@@ -67,9 +83,15 @@ class ScowSync:
         while not self.file_queue.empty():
             entity_file: EntityFile = self.file_queue.get()
             if entity_file.isdir:
-                ssh = SSH(self.address, self.user, self.sshpassword)
-                string_cmd = f'mkdir -p {os.path.join(self.destinationpath, entity_file.subpath)}'
-                ssh.ssh_exe_cmd(cmd=string_cmd)
+                if entity_file.depth <= self.max_depth:
+                    ssh = SSH(self.address, self.user, self.sshpassword)
+                    string_cmd = f'mkdir -p \
+                                 {os.path.join(self.destinationpath, entity_file.subpath)}'
+                    ssh.ssh_exe_cmd(cmd=string_cmd)
+                else:
+                    self.thread_pool.submit(
+                        self.__transfer_dir, entity_file.subpath)
+
             else:
                 self.thread_pool.submit(
                     self.__transfer_file, entity_file.subpath)
