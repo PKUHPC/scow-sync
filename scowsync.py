@@ -52,7 +52,7 @@ class ScowSync:
         with Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True) as popen:
             while popen.poll() is None:
                 line = popen.stdout.readline()
-                print(f'transfering file: {filepath} {line.strip()}')
+                # print(f'transfering file: {filepath} {line.strip()}')
         return
 
     # transfer directory
@@ -67,7 +67,7 @@ class ScowSync:
         with Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True) as popen:
             while popen.poll() is None:
                 line = popen.stdout.readline()
-                print(f'transfering dir: {dirpath} {line.strip()}')
+                # print(f'transfering dir: {dirpath} {line.strip()}')
 
     def transfer_files(self):
         '''
@@ -83,7 +83,7 @@ class ScowSync:
         while not self.file_queue.empty():
             entity_file: EntityFile = self.file_queue.get()
             if entity_file.isdir:
-                if entity_file.depth <= self.max_depth:
+                if entity_file.depth < self.max_depth:
                     ssh = SSH(self.address, self.user, self.sshpassword)
                     string_cmd = f'mkdir -p \
                                  {os.path.join(self.destinationpath, entity_file.subpath)}'

@@ -28,7 +28,7 @@ class FileQueue:
         if os.path.isfile(sourcepath):
             self.file_queue.put(EntityFile(False, subpath, depth))
         else:
-            if depth <= maxdepth:
+            if depth < maxdepth:
                 self.file_queue.put(EntityFile(True, subpath, depth))
                 for file in os.listdir(sourcepath):
                     self.__add_file_to_queue(
