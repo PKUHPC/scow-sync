@@ -56,7 +56,7 @@ class FileQueue:
         '''
         Add files to queue in recursive form
         @param sourcepath: source path
-        @
+        @param max_depth: max depth of recursion
         @return: size of queue
         '''
         self.__add_file_to_queue(
