@@ -8,6 +8,6 @@ from argsparser import ArgsParser
 if __name__ == '__main__':
     args = ArgsParser().get_args_parser().parse_args()
     scow = ScowSync(args.address, args.user, args.password,
-                    args.source, args.destination)
+                    args.source, args.destination, args.max_depth)
     scow.transfer_files()
     

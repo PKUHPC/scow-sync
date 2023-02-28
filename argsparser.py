@@ -56,4 +56,12 @@ class ArgsParser:
             help='path to the destination directory'
         )
 
+        # max depth
+        self.parser.add_argument(
+            '-m', '--max-depth',
+            type=int,
+            default=2,
+            help='max depth of the directory'
+        )
+
         return self.parser
