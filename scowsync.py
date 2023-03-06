@@ -14,13 +14,13 @@ class ScowSync:
     Transfer files from local to remote server
     '''
 
-    def __init__(self, address, user, sshpassword, sourcepath, destinationpath, max_depth):
+    def __init__(self, address, user, sourcepath, destinationpath, max_depth, sshpassword_path):
         self.address = address
         self.user = user
-        self.sshpassword = sshpassword
         self.sourcepath = sourcepath
         self.destinationpath = destinationpath
         self.max_depth = max_depth
+        self.sshpassword_path = sshpassword_path
         self.compress_list = ['.tar', '.zip', '.rar', '.7z', '.gz',
                               '.bz2', '.xz', '.tgz', 'tbz', 'tb2', 'taz', 'tlz', 'txz'
                               ]
@@ -42,11 +42,11 @@ class ScowSync:
         cmd = None
         src = os.path.join(os.path.split(self.sourcepath)[0], filepath)
         if self.__is_compressed(filepath):
-            cmd = f'sshpass -p {self.sshpassword} rsync -a --progress \
+            cmd = f'rsync -a --progress \
                     {src} {self.user}@{self.address}:{os.path.join(self.destinationpath, filepath)} \
                     --partial --inplace'
         else:
-            cmd = f'sshpass -p {self.sshpassword} rsync -az --progress \
+            cmd = f'rsync -az --progress \
                     {src} {self.user}@{self.address}:{os.path.join(self.destinationpath, filepath)} \
                     --partial --inplace'
         with Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True) as popen:
@@ -60,7 +60,7 @@ class ScowSync:
         print(f'transfering dir: {dirpath}')
         src = os.path.join(os.path.split(self.sourcepath)[0], dirpath)
         dst = os.path.join(self.destinationpath, os.path.split(dirpath)[0])
-        cmd = f'sshpass -p {self.sshpassword} rsync -az --progress \
+        cmd = f'rsync -az --progress \
                 {src} {self.user}@{self.address}:{dst} \
                 --partial --inplace'
 
@@ -84,7 +84,7 @@ class ScowSync:
             entity_file: EntityFile = self.file_queue.get()
             if entity_file.isdir:
                 if entity_file.depth < self.max_depth:
-                    ssh = SSH(self.address, self.user, self.sshpassword)
+                    ssh = SSH(self.address, self.user, self.sshpassword_path)
                     string_cmd = f'mkdir -p \
                                  {os.path.join(self.destinationpath, entity_file.subpath)}'
                     ssh.ssh_exe_cmd(cmd=string_cmd)

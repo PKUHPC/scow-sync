@@ -10,12 +10,11 @@ class SSH:
     '''
     _instance_lock = threading.Lock()
 
-    def __init__(self, address, user, password):
+    def __init__(self, address, user, sshpassword_path):
         self.ssh = paramiko.SSHClient()
         self.address = address
         self.user = user
-        self.password = password
-        self.__login(address, user, password)
+        self.__login(address, user, sshpassword_path)
 
     def __new__(cls, *args, **kwargs):
         if not hasattr(SSH, "_instance"):
@@ -24,9 +23,10 @@ class SSH:
                     SSH._instance = object.__new__(cls)
         return SSH._instance
 
-    def __login(self, address, user, password):
+    def __login(self, address, user, sshpassword_path):
+        key = paramiko.RSAKey.from_private_key_file(sshpassword_path)
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        self.ssh.connect(address, username=user, password=password)
+        self.ssh.connect(address, username=user, pkey=key)
 
     def ssh_exe_cmd(self, cmd):
         '''

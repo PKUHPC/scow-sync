@@ -25,7 +25,7 @@ class ArgsParser:
             '-a', '--address',
             type=str,
             default='localhost',
-            help='address of the server'
+            help='address of the server, default is localhost'
         )
 
         # user
@@ -49,12 +49,20 @@ class ArgsParser:
             help='path to the destination directory'
         )
 
-        # max depth
+        # max-depth
         self.parser.add_argument(
             '-m', '--max-depth',
             type=int,
             default=2,
-            help='max depth of the directory'
+            help='max depth of the directory, default is 2'
+        )
+
+        # sshpassword-path
+        self.parser.add_argument(
+            '-p', '--sshpassword-path',
+            type=str,
+            default='~/.ssh/id_rsa',
+            help='path of the ssh password file, default is ~/.ssh/id_rsa'
         )
 
         return self.parser
