@@ -35,13 +35,6 @@ class ArgsParser:
             help='username for logging in to the server'
         )
 
-        # password
-        self.parser.add_argument(
-            '-p', '--password',
-            type=str,
-            help='password for logging in to the server'
-        )
-
         # source path
         self.parser.add_argument(
             '-s', '--source',
