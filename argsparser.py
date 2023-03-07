@@ -59,7 +59,7 @@ class ArgsParser:
 
         # ssh port
         self.parser.add_argument(
-            '-p', '--ssh-port',
+            '-p', '--port',
             type=int,
             default=22,
             help='ssh port of the server, default is 22'
