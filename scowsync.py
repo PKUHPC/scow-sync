@@ -49,10 +49,11 @@ class ScowSync:
             cmd = f'rsync -az --progress \
                     {src} {self.user}@{self.address}:{os.path.join(self.destinationpath, filepath)} \
                     --partial --inplace'
-        with Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True) as popen:
-            while popen.poll() is None:
-                line = popen.stdout.readline()
-                print(f'transfering file: {filepath} {line.strip()}')
+        Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True)
+        # with Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True) as popen:
+        #     while popen.poll() is None:
+        #         line = popen.stdout.readline()
+        #         print(f'transfering file: {filepath} {line.strip()}')
         return
 
     # transfer directory
@@ -64,10 +65,11 @@ class ScowSync:
                 {src} {self.user}@{self.address}:{dst} \
                 --partial --inplace'
 
-        with Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True) as popen:
-            while popen.poll() is None:
-                line = popen.stdout.readline()
-                print(f'transfering dir: {dirpath} {line.strip()}')
+        Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True)
+        # with Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True) as popen:
+        #     while popen.poll() is None:
+        #         line = popen.stdout.readline()
+        #         print(f'transfering dir: {dirpath} {line.strip()}')
 
     def transfer_files(self):
         '''
