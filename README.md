@@ -15,7 +15,7 @@ Execute `sudo bash install.sh`, this will install the script globally by create 
 Usage:
 
 ```bash
-scow-sync [-h] [-a ADDRESS] [-u USER] [-s SOURCE] [-d DESTINATION] [-p ]
+scow-sync [-h] [-a ADDRESS] [-u USER] [-s SOURCE] [-d DESTINATION] [-p PORT] [-k SSHKEY_PATH]
 ```
 
 Optional arguments:
@@ -32,6 +32,9 @@ Optional arguments:
 
   `-d DESTINATION, --destination DESTINATION`
                         path to the destination directory
+  
+  `-p PORT, --port PORT` 
+                        port of the server
 
-  `-p PATH, --sshpassword-path PATH`
+  `-k SSHKEY_PATH, --sshkey-path PATH`
                         path to id_rsa file

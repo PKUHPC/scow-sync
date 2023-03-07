@@ -57,12 +57,20 @@ class ArgsParser:
             help='max depth of the directory, default is 2'
         )
 
+        # ssh port
+        self.parser.add_argument(
+            '-p', '--ssh-port',
+            type=int,
+            default=22,
+            help='ssh port of the server, default is 22'
+        )
+
         # sshpassword-path
         self.parser.add_argument(
-            '-p', '--sshpassword-path',
+            '-k', '--sshkey-path',
             type=str,
             default='~/.ssh/id_rsa',
-            help='path of the ssh password file, default is ~/.ssh/id_rsa'
+            help='path of the sshkey file, default is ~/.ssh/id_rsa'
         )
 
         return self.parser
