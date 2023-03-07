@@ -1,7 +1,7 @@
-# scow-sync
+# SCOW-Sync
 A file transfer system backend on SCOW
 
-## install
+## Install
 
 ### dependencies
 - python3 (Make sure the path is `usr/bin/python3`. If not, change the first line of `scow-sync` to the correct path)
