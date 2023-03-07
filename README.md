@@ -1,4 +1,4 @@
-# SCOW-Sync
+# Scow-Sync
 A file transfer system backend on SCOW
 
 ## Install
@@ -12,9 +12,11 @@ A file transfer system backend on SCOW
 Execute `sudo bash install.sh`, this will install the script globally by create a symbolic link in `/usr/bin/`.
 
 ## Usage
-Usage: scow-sync [-h] [-a ADDRESS] [-u USER] [-p PASSWORD] [-s SOURCE] [-d DESTINATION]
+Usage:
 
-File transfer system for SCOW
+```bash
+scow-sync [-h] [-a ADDRESS] [-u USER] [-p PASSWORD] [-s SOURCE] [-d DESTINATION]
+```
 
 Optional arguments:
 
