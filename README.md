@@ -32,5 +32,6 @@ Optional arguments:
 
   -d DESTINATION, --destination DESTINATION
                         path to the destination directory
+                        
   -p PATH, --sshpassword-path PATH
                         path to id_rsa file
