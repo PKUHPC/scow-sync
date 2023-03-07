@@ -20,18 +20,18 @@ scow-sync [-h] [-a ADDRESS] [-u USER] [-s SOURCE] [-d DESTINATION] [-p ]
 
 Optional arguments:
 
-  -h, --help            show this help message and exit
+  `-h, --help`            show this help message and exit
 
-  -a ADDRESS, --address ADDRESS
+  `-a ADDRESS, --address ADDRESS`
                         address of the server
 
-  -u USER, --user USER  username for logging in to the server
+  `-u USER, --user USER`  username for logging in to the server
 
-  -s SOURCE, --source SOURCE
+  `-s SOURCE, --source SOURCE`
                         path to the source file or directory
 
-  -d DESTINATION, --destination DESTINATION
+  `-d DESTINATION, --destination DESTINATION`
                         path to the destination directory
-                        
-  -p PATH, --sshpassword-path PATH
+
+  `-p PATH, --sshpassword-path PATH`
                         path to id_rsa file
