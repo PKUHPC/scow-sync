@@ -1,13 +1,18 @@
 # scow-sync
 A file transfer system backend on SCOW
 
-## dependencies
-- python3
+## install
+
+### dependencies
+- python3 (Make sure the path is `usr/bin/python3`. If not, change the first line of `scow-sync` to the correct path)
 
 - paramiko 3.0.0
 
+### install globally
+Execute `sudo bash install.sh`, this will install the script globally by create a symbolic link in `/usr/bin/`.
+
 ## Usage
-Usage: scow-sync.py [-h] [-a ADDRESS] [-u USER] [-p PASSWORD] [-s SOURCE] [-d DESTINATION]
+Usage: scow-sync [-h] [-a ADDRESS] [-u USER] [-p PASSWORD] [-s SOURCE] [-d DESTINATION]
 
 File transfer system for SCOW
 
