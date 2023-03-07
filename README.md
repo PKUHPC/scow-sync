@@ -1,6 +1,11 @@
 # scow-sync
 A file transfer system backend on SCOW
 
+## dependencies
+- python3
+
+- paramiko 3.0.0
+
 ## Usage
 Usage: scow-sync.py [-h] [-a ADDRESS] [-u USER] [-p PASSWORD] [-s SOURCE] [-d DESTINATION]
 
@@ -23,4 +28,3 @@ Optional arguments:
 
   -d DESTINATION, --destination DESTINATION
                         path to the destination directory
-
