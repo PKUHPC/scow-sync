@@ -22,8 +22,8 @@ class ScowSync:
         self.max_depth = max_depth
         self.port = port
         self.sshkey_path = sshkey_path
-        self.compress_list = ['.tar', '.zip', '.rar', '.7z', '.gz',
-                              '.bz2', '.xz', '.tgz', 'tbz', 'tb2', 'taz', 'tlz', 'txz'
+        self.compress_list = ['tar', 'zip', 'rar', '7z', 'gz',
+                              'bz2', 'xz', 'tgz', 'tbz', 'tb2', 'taz', 'tlz', 'txz'
                               ]
         self.file_queue = FileQueue()
         self.thread_pool = None
