@@ -5,6 +5,7 @@ import os
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
 from subprocess import Popen, PIPE
+from time import sleep
 from filequeue import FileQueue, EntityFile
 from ssh import SSH
 
@@ -51,7 +52,7 @@ class ScowSync:
             else:
                 cmd = f'rsync -a --progress -e \'ssh -p {self.port}\' \
                         {src} {self.user}@{self.address}:{os.path.join(self.destinationpath, filepath)} \
-                        --partial --inplace --remove-source-files '                
+                        --partial --inplace --remove-source-files '
         else:
             if not self.remove:
                 cmd = f'rsync -az --progress -e \'ssh -p {self.port}\' \
@@ -60,7 +61,7 @@ class ScowSync:
             else:
                 cmd = f'rsync -az --progress -e \'ssh -p {self.port}\' \
                         {src} {self.user}@{self.address}:{os.path.join(self.destinationpath, filepath)} \
-                        --partial --inplace --remove-source-files ' 
+                        --partial --inplace --remove-source-files '
         Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True)
         # with Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True) as popen:
         #     while popen.poll() is None:
@@ -88,6 +89,14 @@ class ScowSync:
         #         line = popen.stdout.readline()
         #         print(f'transfering dir: {dirpath} {line.strip()}')
 
+    # delete the empty dir because the rsync will not delete the empty dir
+    def __delete_empty_dir(self, dirpath):
+        while os.listdir(dirpath):
+            sleep(0)
+        cmd = f'rm -r {dirpath}'
+        print(cmd)
+        Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True)
+
     def transfer_files(self):
         '''
         run to transfer files
@@ -103,7 +112,8 @@ class ScowSync:
             entity_file: EntityFile = self.file_queue.get()
             if entity_file.isdir:
                 if entity_file.depth < self.max_depth:
-                    ssh = SSH(self.address, self.user, self.sshkey_path, self.port)
+                    ssh = SSH(self.address, self.user,
+                              self.sshkey_path, self.port)
                     string_cmd = f'mkdir -p \
                                  {os.path.join(self.destinationpath, entity_file.subpath)}'
                     ssh.ssh_exe_cmd(cmd=string_cmd)
@@ -114,4 +124,10 @@ class ScowSync:
             else:
                 self.thread_pool.submit(
                     self.__transfer_file, entity_file.subpath)
+
+        if self.remove:
+            while not self.file_queue.to_delete_dir_empty():
+                dirpath = self.file_queue.get_to_delete_dir()
+                self.thread_pool.submit(self.__delete_empty_dir, dirpath)
+
         self.thread_pool.shutdown()
