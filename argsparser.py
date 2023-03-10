@@ -24,8 +24,7 @@ class ArgsParser:
         self.parser.add_argument(
             '-a', '--address',
             type=str,
-            default='localhost',
-            help='address of the server, default is localhost'
+            help='address of the server'
         )
 
         # user
@@ -53,24 +52,21 @@ class ArgsParser:
         self.parser.add_argument(
             '-m', '--max-depth',
             type=int,
-            default=2,
-            help='max depth of the directory, default is 2'
+            help='max depth of the directory'
         )
 
         # ssh port
         self.parser.add_argument(
             '-p', '--port',
             type=int,
-            default=22,
-            help='ssh port of the server, default is 22'
+            help='ssh port of the server'
         )
 
         # sshpassword-path
         self.parser.add_argument(
             '-k', '--sshkey-path',
             type=str,
-            default='~/.ssh/id_rsa',
-            help='path of the sshkey file, default is ~/.ssh/id_rsa'
+            help='path of the sshkey file, default is'
         )
 
         return self.parser
