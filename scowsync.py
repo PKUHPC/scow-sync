@@ -94,7 +94,6 @@ class ScowSync:
         while os.listdir(dirpath):
             sleep(0)
         cmd = f'rm -r {dirpath}'
-        print(cmd)
         Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True)
 
     def transfer_files(self):
