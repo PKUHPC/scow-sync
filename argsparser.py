@@ -73,7 +73,7 @@ class ArgsParser:
         self.parser.add_argument(
             '-r', '--remove',
             type=int,
-            help='remove source files or not after transfer(non-dir)'
+            help='remove source files or not after transfer'
         )
 
         return self.parser

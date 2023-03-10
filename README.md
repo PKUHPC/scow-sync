@@ -34,4 +34,4 @@ Optional arguments:
 
   `-k SSHKEY_PATH, --sshkey-path PATH`  path to id_rsa file
   
-  `-r, --remove`  remove the source file after transfer(non-dir)
+  `-r, --remove`  remove the source file after transfer
