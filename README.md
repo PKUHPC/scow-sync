@@ -20,21 +20,18 @@ scow-sync [-h] [-a ADDRESS] [-u USER] [-s SOURCE] [-d DESTINATION] [-p PORT] [-k
 
 Optional arguments:
 
-  `-h, --help`            show this help message and exit
+  `-h, --help`  show this help message and exit
 
-  `-a ADDRESS, --address ADDRESS`
-                        address of the server
+  `-a ADDRESS, --address ADDRESS` address of the server
 
   `-u USER, --user USER`  username for logging in to the server
 
-  `-s SOURCE, --source SOURCE`
-                        path to the source file or directory
+  `-s SOURCE, --source SOURCE`  path to the source file or directory
 
-  `-d DESTINATION, --destination DESTINATION`
-                        path to the destination directory
+  `-d DESTINATION, --destination DESTINATION` path to the destination directory
   
-  `-p PORT, --port PORT` 
-                        port of the server
+  `-p PORT, --port PORT`  port of the server
 
-  `-k SSHKEY_PATH, --sshkey-path PATH`
-                        path to id_rsa file
+  `-k SSHKEY_PATH, --sshkey-path PATH`  path to id_rsa file
+  
+  `-r, --remove`  remove the source file after transfer(non-dir)

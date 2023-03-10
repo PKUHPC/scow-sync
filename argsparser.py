@@ -69,4 +69,11 @@ class ArgsParser:
             help='path of the sshkey file, default is'
         )
 
+        # remove source files or not after transfer
+        self.parser.add_argument(
+            '-r', '--remove',
+            type=int,
+            help='remove source files or not after transfer(non-dir)'
+        )
+
         return self.parser
