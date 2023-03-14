@@ -15,7 +15,7 @@ class ScowSync:
     Transfer files from local to remote server
     '''
 
-    def __init__(self, address, user, sourcepath, destinationpath, max_depth, port, sshkey_path, remove):
+    def __init__(self, address, user, sourcepath, destinationpath, max_depth, port, sshkey_path):
         self.address = address
         self.user = user
         self.sourcepath = sourcepath
@@ -23,7 +23,6 @@ class ScowSync:
         self.max_depth = max_depth
         self.port = port
         self.sshkey_path = sshkey_path
-        self.remove = remove
         self.compress_list = ['tar', 'zip', 'rar', '7z', 'gz',
                               'bz2', 'xz', 'tgz', 'tbz', 'tb2', 'taz', 'tlz', 'txz'
                               ]
@@ -45,23 +44,13 @@ class ScowSync:
         cmd = None
         src = os.path.join(os.path.split(self.sourcepath)[0], filepath)
         if self.__is_compressed(filepath):
-            if not self.remove:
-                cmd = f'rsync -a --progress -e \'ssh -p {self.port}\' \
-                        {src} {self.user}@{self.address}:{os.path.join(self.destinationpath, filepath)} \
-                        --partial --inplace'
-            else:
-                cmd = f'rsync -a --progress -e \'ssh -p {self.port}\' \
-                        {src} {self.user}@{self.address}:{os.path.join(self.destinationpath, filepath)} \
-                        --partial --inplace --remove-source-files '
+            cmd = f'rsync -a --progress -e \'ssh -p {self.port}\' \
+                    {src} {self.user}@{self.address}:{os.path.join(self.destinationpath, filepath)} \
+                    --partial --inplace'
         else:
-            if not self.remove:
-                cmd = f'rsync -az --progress -e \'ssh -p {self.port}\' \
-                        {src} {self.user}@{self.address}:{os.path.join(self.destinationpath, filepath)} \
-                        --partial --inplace'
-            else:
-                cmd = f'rsync -az --progress -e \'ssh -p {self.port}\' \
-                        {src} {self.user}@{self.address}:{os.path.join(self.destinationpath, filepath)} \
-                        --partial --inplace --remove-source-files '
+            cmd = f'rsync -az --progress -e \'ssh -p {self.port}\' \
+                    {src} {self.user}@{self.address}:{os.path.join(self.destinationpath, filepath)} \
+                    --partial --inplace'
         Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True)
         # with Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True) as popen:
         #     while popen.poll() is None:
@@ -74,14 +63,9 @@ class ScowSync:
         # print(f'transfering dir: {dirpath}')
         src = os.path.join(os.path.split(self.sourcepath)[0], dirpath)
         dst = os.path.join(self.destinationpath, os.path.split(dirpath)[0])
-        if not self.remove:
-            cmd = f'rsync -az --progress  -e \'ssh -p {self.port}\' \
-                    {src} {self.user}@{self.address}:{dst} \
-                    --partial --inplace'
-        else:
-            cmd = f'rsync -az --progress  -e \'ssh -p {self.port}\' \
-                    {src} {self.user}@{self.address}:{dst} \
-                    --partial --inplace --remove-source-files '
+        cmd = f'rsync -az --progress  -e \'ssh -p {self.port}\' \
+                {src} {self.user}@{self.address}:{dst} \
+                --partial --inplace'
 
         Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True)
         # with Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True) as popen:
@@ -123,10 +107,4 @@ class ScowSync:
             else:
                 self.thread_pool.submit(
                     self.__transfer_file, entity_file.subpath)
-
-        if self.remove:
-            while not self.file_queue.to_delete_dir_empty():
-                dirpath = self.file_queue.get_to_delete_dir()
-                self.thread_pool.submit(self.__delete_empty_dir, dirpath)
-
         self.thread_pool.shutdown()
