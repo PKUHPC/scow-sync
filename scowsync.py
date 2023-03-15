@@ -5,7 +5,6 @@ import os
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
 from subprocess import Popen, PIPE
-from time import sleep
 from filequeue import FileQueue, EntityFile
 from ssh import SSH
 
@@ -51,11 +50,13 @@ class ScowSync:
             cmd = f'rsync -az --progress -e \'ssh -p {self.port}\' \
                     {src} {self.user}@{self.address}:{os.path.join(self.destinationpath, filepath)} \
                     --partial --inplace'
-        Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True)
-        # with Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True) as popen:
-        #     while popen.poll() is None:
-        #         line = popen.stdout.readline()
-        #         print(f'transfering file: {filepath} {line.strip()}')
+        # Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True)
+        with Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True) as popen:
+            while popen.poll() is None:
+                stdout = popen.stdout
+                if stdout is not None:
+                    line = stdout.readline()
+                    print(f'transfering file: {filepath} {line.strip()}')
         return
 
     # transfer directory
@@ -67,11 +68,14 @@ class ScowSync:
                 {src} {self.user}@{self.address}:{dst} \
                 --partial --inplace'
 
-        Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True)
-        # with Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True) as popen:
-        #     while popen.poll() is None:
-        #         line = popen.stdout.readline()
-        #         print(f'transfering dir: {dirpath} {line.strip()}')
+        # Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True)
+        with Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True) as popen:
+            while popen.poll() is None:
+                stdout = popen.stdout
+                if stdout is not None:
+                    line = stdout.readline()
+                    print(f'transfering dir: {dirpath} {line.strip()}')
+        return
 
     def transfer_files(self):
         '''
