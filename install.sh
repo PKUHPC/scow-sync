@@ -4,5 +4,5 @@
 # pip3 install paramiko==3.0.0
 local_path=$(pwd)
 chmod +x $local_path/scow-sync
-echo "export PATH=\$PATH:$local_path" >> /etc/profile
-source /etc/profile
+ln -s $local_path/scow-sync /usr/bin/scow-sync
+chmod +x /usr/bin/scow-sync
