@@ -9,7 +9,7 @@ A file transfer system backend on SCOW
 - paramiko 3.0.0
 
 ### install globally
-Execute `sudo bash install.sh`, this will install the script globally by create a symbolic link in `/usr/bin/`.
+Clone the repository in a directory that all users have access to, then execute`sudo bash install.sh`
 
 ## Usage
 Usage:
