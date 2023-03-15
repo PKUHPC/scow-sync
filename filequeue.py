@@ -23,13 +23,13 @@ class FileQueue:
 
     def __init__(self):
         self.file_queue = queue.Queue(maxsize=0)  # maxsize=0则队列大小无限制
-        self.delete_dir_queue = queue.Queue(maxsize=0)
+        # self.delete_dir_queue = queue.Queue(maxsize=0)
 
     def __add_file_to_queue(self, sourcepath, subpath, depth, maxdepth):
         if os.path.isfile(sourcepath):
             self.file_queue.put(EntityFile(False, subpath, depth))
         else:
-            self.delete_dir_queue.put(sourcepath)
+            # self.delete_dir_queue.put(sourcepath)
             if depth < maxdepth:
                 self.file_queue.put(EntityFile(True, subpath, depth))
                 for file in os.listdir(sourcepath):
@@ -54,17 +54,17 @@ class FileQueue:
         '''
         return self.file_queue.get()
     
-    def to_delete_dir_empty(self):
-        '''
-        Return True if delete_dir_queue is empty
-        '''
-        return self.delete_dir_queue.empty()
+    # def to_delete_dir_empty(self):
+    #     '''
+    #     Return True if delete_dir_queue is empty
+    #     '''
+    #     return self.delete_dir_queue.empty()
     
-    def get_to_delete_dir(self):
-        '''
-        Get file from delete_dir_queue
-        '''
-        return self.delete_dir_queue.get()
+    # def get_to_delete_dir(self):
+    #     '''
+    #     Get file from delete_dir_queue
+    #     '''
+    #     return self.delete_dir_queue.get()
 
     def add_all_to_queue(self, sourcepath, max_depth) -> int:
         '''
