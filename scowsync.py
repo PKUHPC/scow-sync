@@ -73,13 +73,6 @@ class ScowSync:
         #         line = popen.stdout.readline()
         #         print(f'transfering dir: {dirpath} {line.strip()}')
 
-    # delete the empty dir because the rsync will not delete the empty dir
-    def __delete_empty_dir(self, dirpath):
-        while os.listdir(dirpath):
-            sleep(0)
-        cmd = f'rm -r {dirpath}'
-        Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True)
-
     def transfer_files(self):
         '''
         run to transfer files
