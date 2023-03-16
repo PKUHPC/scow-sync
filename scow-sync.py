@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 '''
 Code entry to run the scow-sync
 '''

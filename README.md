@@ -4,7 +4,9 @@ A file transfer system backend on SCOW
 ## Install
 
 ### dependencies
-- python3 (Make sure the path is `usr/bin/python3`. If not, change the first line of `scow-sync` to the correct path)
+- python3
+ 
+- pip3
 
 - paramiko 3.0.0
 
@@ -15,7 +17,7 @@ Clone the repository in a directory that all users have access to, then execute`
 Usage:
 
 ```bash
-scow-sync [-h] [-a ADDRESS] [-u USER] [-s SOURCE] [-d DESTINATION] [-p PORT] [-k SSHKEY_PATH]
+python3 scow-sync-start [-h] [-a ADDRESS] [-u USER] [-s SOURCE] [-d DESTINATION] [-p PORT] [-k SSHKEY_PATH]
 ```
 
 Optional arguments:
