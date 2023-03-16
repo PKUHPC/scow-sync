@@ -118,3 +118,4 @@ class ScowSync:
                 self.thread_pool.submit(
                     self.__transfer_file, entity_file.subpath)
         self.thread_pool.shutdown()
+        exit(0)

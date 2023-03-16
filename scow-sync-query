@@ -1,9 +1,12 @@
+#!/usr/bin/python3
 '''
 query thr progress of file transfered
 '''
 from argparse import ArgumentParser
 import os
 import sys
+import fcntl
+import select
 import subprocess
 import psutil
 
@@ -25,7 +28,7 @@ class PidArgsParser:
         '''
         # fid
         self.parser.add_argument(
-            '-f', '--files_transfer_id',
+            '-f', '--transfer_id',
             type=int,
             help='the id of the file transfer this time'
         )
@@ -40,20 +43,25 @@ class PidArgsParser:
 
 if __name__ == '__main__':
     args = PidArgsParser().get_args_parser().parse_args()
-    fid = args.files_transfer_id
+    fid = args.transfer_id
     pid = args.pid
 
-    filename = f'./tmp/{fid}.out'
+    filename = f'/tmp/scow-sync/{fid}.out'
     process = psutil.Process(pid)
 
+    # 
     if os.path.exists(filename):
         cmd = ["tail", "-f", filename]
         popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        while popen.poll() is None and process.is_running():
-            stdout = popen.stdout
-            if stdout:
-                output = stdout.readline()
-                if output:
+        stdout = popen.stdout
+        if stdout:
+            stdout_fd = stdout.fileno()
+            flags = fcntl.fcntl(stdout_fd, fcntl.F_GETFL)
+            fcntl.fcntl(stdout_fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+            while popen.poll() is None and process.is_running():
+                ready, _, _ = select.select([stdout], [], [], 0)
+                if ready:
+                    output = stdout.readline()
                     sys.stdout.write(output.decode().strip())
                     sys.stdout.write('\n')
                     sys.stdout.flush()

@@ -1,23 +1,32 @@
 # Scow-Sync
-A file transfer system backend on SCOW
+A file transfer system tool on SCOW
 
 ## Install
 
 ### dependencies
+
 - python3
  
 - pip3
 
 - paramiko 3.0.0
 
+- psutil 5.9.4 
+
 ### install globally
-Clone the repository in a directory that all users have access to, then execute`sudo bash install.sh`
+
+Clone the repository in a directory that sudoer have access to, then execute`sudo bash install.sh`. 
+
+Attention that this will create /tmp/scow-sync directory which is used to stored the temp files of the transfer process.
 
 ## Usage
-Usage:
+
+### start
+
+You can use the following command for transfer, but the command will return immediately and write the transfer ID(for your query, you can see next) and process ID to stdout.
 
 ```bash
-python3 scow-sync-start [-h] [-a ADDRESS] [-u USER] [-s SOURCE] [-d DESTINATION] [-p PORT] [-k SSHKEY_PATH]
+scow-sync-start [-h] [-a ADDRESS] [-u USER] [-s SOURCE] [-d DESTINATION] [-p PORT] [-k SSHKEY_PATH]
 ```
 
 Optional arguments:
@@ -34,5 +43,20 @@ Optional arguments:
   
   `-p PORT, --port PORT`  port of the server
 
-  `-k SSHKEY_PATH, --sshkey-path PATH`  path to id_rsa file
+  `-k SSHKEY_PATH, --sshkey_path PATH`  path to id_rsa file
+
+### query
+
+You can use the following command to view the real-time transfer process, including file path, progress, speed and remaining time.
+
+```bash
+scow-sync-query [-f transfer_id] [-p pid]
+```
+
+Optional arguments:
+
+  `-f TRANSFER_ID, --transfer_id TRANSFER_ID`  the id of this transfer
+
+  `-p PID, --pid PID` the process id of this transfer
+
   
