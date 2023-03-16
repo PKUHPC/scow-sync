@@ -46,6 +46,7 @@ class ScowSync:
         time = parts[3]
         sys.stdout.write(json.dumps({"filepath":filepath, 'progress': progress, 'speed': speed, 'time': time}))
         sys.stdout.write("\n")
+        sys.stdout.flush()
 
     # output transfer progress to stdout
     def __output_progress(self, popen, filepath):
