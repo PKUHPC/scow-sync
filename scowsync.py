@@ -2,6 +2,8 @@
 Transfer files from local to remote server on SCOW
 '''
 import os
+import json
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
 from subprocess import Popen, PIPE
@@ -29,7 +31,6 @@ class ScowSync:
         self.thread_pool = None
 
     # compress uncompressed files
-
     def __is_compressed(self, filename) -> bool:
         if '.' in filename:
             ext = filename.split('.')[-1]
@@ -37,26 +38,41 @@ class ScowSync:
                 return True
         return False
 
+    # output filepath, progress, speed and time of json into stdout
+    def __parse_rsync_output(self, line, filepath):
+        parts = line.split()
+        progress = parts[1]
+        speed = parts[2]
+        time = parts[3]
+        sys.stdout.write(json.dumps({"filepath":filepath, 'progress': progress, 'speed': speed, 'time': time}))
+        sys.stdout.write("\n")
+
+    # output transfer progress to stdout
+    def __output_progress(self, popen, filepath):
+        while popen.poll() is None:
+            stdout = popen.stdout
+            if stdout is not None:
+                line = stdout.readline()
+                if "%" in line:
+                    self.__parse_rsync_output(line,filepath)
+
+
     # transfer single file
     def __transfer_file(self, filepath):
         # print(f'transfering file: {filepath}')
         cmd = None
         src = os.path.join(os.path.split(self.sourcepath)[0], filepath)
         if self.__is_compressed(filepath):
-            cmd = f'rsync -a --progress -e \'ssh -p {self.port}\' \
+            cmd = f'rsync -a --progress -e \'ssh -p {self.port} -o \'LogLevel=QUIET\'\' \
                     {src} {self.user}@{self.address}:{os.path.join(self.destinationpath, filepath)} \
                     --partial --inplace'
         else:
-            cmd = f'rsync -az --progress -e \'ssh -p {self.port}\' \
+            cmd = f'rsync -az --progress -e \'ssh -p {self.port} -o \'LogLevel=QUIET\'\' \
                     {src} {self.user}@{self.address}:{os.path.join(self.destinationpath, filepath)} \
                     --partial --inplace'
         # Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True)
-        with Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True) as popen:
-            while popen.poll() is None:
-                stdout = popen.stdout
-                if stdout is not None:
-                    line = stdout.readline()
-                    print(f'transfering file: {filepath} {line.strip()}')
+        popen = Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True)
+        self.__output_progress(popen, src)
         return
 
     # transfer directory
@@ -64,17 +80,13 @@ class ScowSync:
         # print(f'transfering dir: {dirpath}')
         src = os.path.join(os.path.split(self.sourcepath)[0], dirpath)
         dst = os.path.join(self.destinationpath, os.path.split(dirpath)[0])
-        cmd = f'rsync -az --progress  -e \'ssh -p {self.port}\' \
+        cmd = f'rsync -az --progress  -e \'ssh -p {self.port} -o \'LogLevel=QUIET\'\' \
                 {src} {self.user}@{self.address}:{dst} \
                 --partial --inplace'
 
         # Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True)
-        with Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True) as popen:
-            while popen.poll() is None:
-                stdout = popen.stdout
-                if stdout is not None:
-                    line = stdout.readline()
-                    print(f'transfering dir: {dirpath} {line.strip()}')
+        popen = Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True)
+        self.__output_progress(popen, src)
         return
 
     def transfer_files(self):
