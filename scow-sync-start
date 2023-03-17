@@ -3,6 +3,7 @@
 Start a file transfer asynchronously
 '''
 import sys
+import json
 import hashlib
 from subprocess import Popen
 from argsparser import ArgsParser
@@ -19,9 +20,7 @@ if __name__ == '__main__':
 
     popen = Popen(cmd, shell=True, stdout=open(f'/tmp/scow-sync/{unique_id}.out', 'w'))
     pid = popen.pid
-    sys.stdout.write(str(unique_id))
-    sys.stdout.write('\n')
-    sys.stdout.write(str(pid))
-    sys.stdout.write('\n')
+
+    sys.stdout.write(json.dumps({"transferId": unique_id, "processId": pid}))
     
     exit(0)
