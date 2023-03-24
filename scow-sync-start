@@ -16,6 +16,6 @@ if __name__ == '__main__':
 
     os.mkdir(os.path.join('/tmp/scow-sync', str(unique_id)), 0o777)
 
-    popen = Popen(cmd, shell=True,stderr=open(os.path.join('/tmp/scow-sync', str(unique_id), 'stderr'), 'w'))
+    popen = Popen(cmd, shell=True)
 
     sys.exit()
