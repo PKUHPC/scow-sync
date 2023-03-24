@@ -10,8 +10,7 @@ from argsparser import ArgsParser
 
 if __name__ == '__main__':
     args = ArgsParser().get_args_parser().parse_args()
-    cmd = f'scow-sync -a {args.address} -u {args.user} -s {args.source} -d {args.destination} \
-        -m {args.max_depth} -p {args.port} -k {args.sshkey_path}'
+    cmd = f'scow-sync -a {args.address} -u {args.user} -s {args.source} -d {args.destination} -m {args.max_depth} -p {args.port} -k {args.sshkey_path}'
 
     unique_id = utils.gen_file_transfer_id(cmd)
 

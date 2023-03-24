@@ -31,8 +31,8 @@ class ScowSync:
                               ]
         self.file_queue = FileQueue()
         self.thread_pool = None
-        self.raw_cmd = f'scow-sync -a {address} -u {user} -s {sourcepath} -d {destinationpath} \
-                    -m {max_depth} -p {port} -k {sshkey_path}'
+        self.raw_cmd = f'scow-sync -a {address} -u {user} -s {sourcepath} -d {destinationpath} -m {max_depth} -p {port} -k {sshkey_path}'
+
         self.transfer_id = utils.gen_file_transfer_id(self.raw_cmd)
 
     # compress uncompressed files
@@ -59,7 +59,7 @@ class ScowSync:
         output_dir_path = os.path.join(
             '/tmp/scow-sync/', str(self.transfer_id))
         output_file_path = os.path.join(
-            output_dir_path, os.path.basename(filepath))
+            output_dir_path, f'{os.path.basename(filepath)}.out')
         with open(output_file_path, 'a') as file_stream:
             while popen.poll() is None:
                 stdout = popen.stdout
@@ -67,6 +67,8 @@ class ScowSync:
                     line = stdout.readline()
                     if "%" in line:
                         self.__parse_rsync_output(line, filepath, file_stream)
+            file_stream.close()
+        os.remove(output_file_path)
 
     # transfer single file
 
