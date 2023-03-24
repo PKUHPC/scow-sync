@@ -2,22 +2,21 @@
 '''
 Start a file transfer asynchronously
 '''
+import os
 import sys
-import json
-import hashlib
 from subprocess import Popen
+import utils
 from argsparser import ArgsParser
 
 if __name__ == '__main__':
     args = ArgsParser().get_args_parser().parse_args()
-    cmd = f'scow-sync -a {args.address} -u {args.user} -s {args.source} -d {args.destination} -m {args.max_depth} -p {args.port} -k {args.sshkey_path}'
-    
-    # 此次传输的重定向文件，使用hashlib生成
-    hash_object = hashlib.md5(cmd.encode())
-    hash_value = int.from_bytes(hash_object.digest(), byteorder='big')
-    modulus = 10**9 + 7
-    unique_id = hash_value % modulus
+    cmd = f'scow-sync -a {args.address} -u {args.user} -s {args.source} -d {args.destination} \
+        -m {args.max_depth} -p {args.port} -k {args.sshkey_path}'
 
-    popen = Popen(cmd, shell=True, stdout=open(f'/tmp/scow-sync/{unique_id}.out', 'w'))
-    
+    unique_id = utils.gen_file_transfer_id(cmd)
+
+    os.mkdir(os.path.join('/tmp/scow-sync', str(unique_id)), 0o777)
+
+    popen = Popen(cmd, shell=True)
+
     sys.exit()

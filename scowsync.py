@@ -1,12 +1,14 @@
 '''
 Transfer files from local to remote server on SCOW
 '''
+from io import TextIOWrapper
 import os
 import json
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
 from subprocess import Popen, PIPE
+import utils
 from filequeue import FileQueue, EntityFile
 from ssh import SSH
 
@@ -29,6 +31,9 @@ class ScowSync:
                               ]
         self.file_queue = FileQueue()
         self.thread_pool = None
+        self.raw_cmd = f'scow-sync -a {address} -u {user} -s {sourcepath} -d {destinationpath} \
+                    -m {max_depth} -p {port} -k {sshkey_path}'
+        self.transfer_id = utils.gen_file_transfer_id(self.raw_cmd)
 
     # compress uncompressed files
     def __is_compressed(self, filename) -> bool:
@@ -39,26 +44,32 @@ class ScowSync:
         return False
 
     # output filepath, progress, speed and time of json into stdout
-    def __parse_rsync_output(self, line, filepath):
+    def __parse_rsync_output(self, line, filepath, fileopen: TextIOWrapper):
         parts = line.split()
         progress = parts[1]
         speed = parts[2]
         time = parts[3]
-        sys.stdout.write(json.dumps({"filepath":filepath, 'progress': progress, 'speed': speed, 'time': time}))
-        sys.stdout.write("\n")
-        sys.stdout.flush()
+        fileopen.write(
+            json.dumps({"filepath": filepath, 'progress': progress, 'speed': speed, 'time': time}))
+        fileopen.write('\n')
+        fileopen.flush()
 
-    # output transfer progress to stdout
+    # output transfer progress to tmpfile
     def __output_progress(self, popen, filepath):
-        while popen.poll() is None:
-            stdout = popen.stdout
-            if stdout is not None:
-                line = stdout.readline()
-                if "%" in line:
-                    self.__parse_rsync_output(line,filepath)
-
+        output_dir_path = os.path.join(
+            '/tmp/scow-sync/', str(self.transfer_id))
+        output_file_path = os.path.join(
+            output_dir_path, os.path.basename(filepath))
+        with open(output_file_path, 'a') as file_stream:
+            while popen.poll() is None:
+                stdout = popen.stdout
+                if stdout is not None:
+                    line = stdout.readline()
+                    if "%" in line:
+                        self.__parse_rsync_output(line, filepath, file_stream)
 
     # transfer single file
+
     def __transfer_file(self, filepath):
         # print(f'transfering file: {filepath}')
         cmd = None
@@ -118,4 +129,5 @@ class ScowSync:
                 self.thread_pool.submit(
                     self.__transfer_file, entity_file.subpath)
         self.thread_pool.shutdown()
-        exit(0)
+        os.rmdir(os.path.join('/tmp/scow-sync/', str(self.transfer_id)))
+        sys.exit()
