@@ -15,12 +15,9 @@ if __name__ == '__main__':
     # 此次传输的重定向文件，使用hashlib生成
     hash_object = hashlib.md5(cmd.encode())
     hash_value = int.from_bytes(hash_object.digest(), byteorder='big')
-    modulus = 10**9 + 7;
+    modulus = 10**9 + 7
     unique_id = hash_value % modulus
 
     popen = Popen(cmd, shell=True, stdout=open(f'/tmp/scow-sync/{unique_id}.out', 'w'))
-    pid = popen.pid
-
-    sys.stdout.write(json.dumps({"transferId": unique_id, "processId": pid}))
     
-    exit(0)
+    sys.exit()
