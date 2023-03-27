@@ -43,41 +43,22 @@ class ScowSync:
                 return True
         return False
 
-    # output filepath, progress, speed and time of json into stdout
-    def __parse_rsync_output(self, line, filepath, fileopen: TextIOWrapper):
-        parts = line.split()
-        progress = parts[1]
-        speed = parts[2]
-        time = parts[3]
-        fileopen.write(
-            json.dumps({"filepath": filepath, 'progress': progress, 'speed': speed, 'time': time}))
-        fileopen.write('\n')
-        fileopen.flush()
-
-    # output transfer progress to tmpfile
-    def __output_progress(self, popen:Popen, filepath):
+    # start rsync
+    def __start_rsync(self, cmd, fullpath):
         output_dir_path = os.path.join(
             '/tmp/scow-sync/', str(self.transfer_id))
         output_file_path = os.path.join(
-            output_dir_path, f'{os.path.basename(filepath)}.out')
-        with open(output_file_path, 'a', encoding='utf-8') as file_stream:
-            while popen.poll() is None:
-                stdout = popen.stdout
-                stderr = popen.stderr
-                if stderr is not None:
-                    line = stderr.readline()
-                    if line != '':
-                        sys.stderr.write(line)
-                        sys.stderr.write('\n')
-                if stdout is not None:
-                    line = stdout.readline()
-                    if "%" in line:
-                        self.__parse_rsync_output(line, filepath, file_stream)
+            output_dir_path, f'{os.path.basename(fullpath)}.out')
+        popen = Popen(cmd, stdout=open(output_file_path, 'a',encoding='utf-8'), stderr=PIPE, universal_newlines=True, shell=True)
+
+        # 等待进程结束
+        stdout, stderr = popen.communicate()
+        if stderr:
+            sys.stderr.write(stderr)
 
         os.remove(output_file_path)
 
     # transfer single file
-
     def __transfer_file(self, filepath):
         print(f'transfering file: {filepath}')
         # sys.stdout.write(f'transfering file: {filepath}\n')
@@ -92,8 +73,7 @@ class ScowSync:
                     {src} {self.user}@{self.address}:{os.path.join(self.destinationpath, filepath)} \
                     --partial --inplace'
         # Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True)
-        popen = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True, shell=True)
-        self.__output_progress(popen, src)
+        self.__start_rsync(cmd, src)
         return
 
     # transfer directory
@@ -107,8 +87,7 @@ class ScowSync:
                 --partial --inplace'
 
         # Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True)
-        popen = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True, shell=True)
-        self.__output_progress(popen, src)
+        self.__start_rsync(cmd, src)
         return
 
     def transfer_files(self):

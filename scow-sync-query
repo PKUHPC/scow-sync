@@ -2,26 +2,60 @@
 '''
 query the progress of file transfered
 '''
-import os
 import json
-import codecs
+import os
 import sys
+from subprocess import PIPE, CalledProcessError, Popen
+
+
+def parse_rsync_output(self, line, filepath):
+    parts = line.split()
+    progress = parts[1]
+    speed = parts[2]
+    time = parts[3]
+    return json.dumps({"filepath": filepath, 'progress': progress, 'speed': speed, 'time': time})
 
 
 def process_file(file_path):
     '''
-    parse the last line and concat
+    parse the output of rsync
     '''
-    with codecs.open(file_path, 'r', encoding='utf-8') as file_stream:
-        last_line = ''
-        for line in file_stream:
-            last_line = line
-        if last_line != '':
-            json_obj = json.loads(last_line)
-            return json_obj
-        else:
-            return None
+    if os.path.exists(file_path):
+        try:
+            tail_progress = Popen(['tail', '-n', '2', file_path], stdout=PIPE, stderr=PIPE)
+            stdout, stderr = tail_progress.communicate()
+            
+            sys.stderr.write(stderr.decode('utf-8'))
+            sys.stderr.flush()
 
+            # stdout: filename\n\r xxx \r xxx \r xxx \r
+            if stdout != '':
+                lines =  stdout.decode('utf-8')
+                if '%' not in lines: # 还没开始打印进度
+                    return None
+                
+                lines_list = lines.split('\n')
+
+                filename = lines_list[0]
+                
+                ## DEBUG
+                # progess_list = lines_list[1].split('\r')
+ 
+                # progress_line = progess_list[-1]
+
+                # progress_parts = progress_line.split()
+
+                progress_parts = lines_list[1].split('\r')[-1].split()
+                transfer_size = progress_parts[0]
+                progress = progress_parts[1]
+                speed = progress_parts[2]
+                time = progress_parts[3]
+                return {"filename": filename, 'transfer_size': transfer_size, 'progress': progress, 'speed': speed, 'time': time}
+            else:
+                return None
+        except CalledProcessError:
+            return None
+        
 def traverse_folder(folder_path):
     '''
     traverse /tmp/scow-sync
