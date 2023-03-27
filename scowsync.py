@@ -62,18 +62,21 @@ class ScowSync:
             output_dir_path, f'{os.path.basename(filepath)}.out')
         with open(output_file_path, 'a') as file_stream:
             while popen.poll() is None:
-                stdout = popen.stdout
+                stdout, stderr = popen.communicate()
+                if stderr is not None:
+                    sys.stderr.write(stderr)
                 if stdout is not None:
                     line = stdout.readline()
                     if "%" in line:
                         self.__parse_rsync_output(line, filepath, file_stream)
-            file_stream.close()
+
         os.remove(output_file_path)
 
     # transfer single file
 
     def __transfer_file(self, filepath):
         # print(f'transfering file: {filepath}')
+        sys.stdout.write(f'transfering file: {filepath}\n')
         cmd = None
         src = os.path.join(os.path.split(self.sourcepath)[0], filepath)
         if self.__is_compressed(filepath):
@@ -85,13 +88,14 @@ class ScowSync:
                     {src} {self.user}@{self.address}:{os.path.join(self.destinationpath, filepath)} \
                     --partial --inplace'
         # Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True)
-        popen = Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True)
+        popen = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True, shell=True)
         self.__output_progress(popen, src)
         return
 
     # transfer directory
     def __transfer_dir(self, dirpath):
         # print(f'transfering dir: {dirpath}')
+        sys.stdout.write(f'transfering dir: {dirpath}\n')
         src = os.path.join(os.path.split(self.sourcepath)[0], dirpath)
         dst = os.path.join(self.destinationpath, os.path.split(dirpath)[0])
         cmd = f'rsync -az --progress  -e \'ssh -p {self.port} -o \'LogLevel=QUIET\'\' \
@@ -99,7 +103,7 @@ class ScowSync:
                 --partial --inplace'
 
         # Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True)
-        popen = Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True)
+        popen = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True, shell=True)
         self.__output_progress(popen, src)
         return
 

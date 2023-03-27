@@ -13,4 +13,6 @@ chmod +x /usr/bin/scow-sync-start
 chmod +x /usr/bin/scow-sync-query
 mkdir /tmp
 mkdir /tmp/scow-sync
+touch /tmp/scow-sync/scow-sync.out
+touch /tmp/scow-sync/scow-sync.err
 chmod 777 /tmp/scow-sync
