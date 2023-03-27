@@ -7,15 +7,6 @@ import os
 import sys
 from subprocess import PIPE, CalledProcessError, Popen
 
-
-def parse_rsync_output(self, line, filepath):
-    parts = line.split()
-    progress = parts[1]
-    speed = parts[2]
-    time = parts[3]
-    return json.dumps({"filepath": filepath, 'progress': progress, 'speed': speed, 'time': time})
-
-
 def process_file(file_path):
     '''
     parse the output of rsync
