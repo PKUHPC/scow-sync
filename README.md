@@ -47,16 +47,11 @@ Optional arguments:
 
 ### query
 
-You can use the following command to view the real-time transfer process, including file path, progress, speed and remaining time.
+You can use the following command to view the real-time transfer process, including filename, tranfer_size, progress, speed and remaining time.
 
 ```bash
-scow-sync-query [-f transfer_id] [-p pid]
+scow-sync-query
 ```
 
-Optional arguments:
-
-  `-f TRANSFER_ID, --transfer_id TRANSFER_ID`  the id of this transfer
-
-  `-p PID, --pid PID` the process id of this transfer
 
   
