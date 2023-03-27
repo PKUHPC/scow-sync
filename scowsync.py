@@ -55,16 +55,20 @@ class ScowSync:
         fileopen.flush()
 
     # output transfer progress to tmpfile
-    def __output_progress(self, popen, filepath):
+    def __output_progress(self, popen:Popen, filepath):
         output_dir_path = os.path.join(
             '/tmp/scow-sync/', str(self.transfer_id))
         output_file_path = os.path.join(
             output_dir_path, f'{os.path.basename(filepath)}.out')
-        with open(output_file_path, 'a') as file_stream:
+        with open(output_file_path, 'a', encoding='utf-8') as file_stream:
             while popen.poll() is None:
-                stdout, stderr = popen.communicate()
+                stdout = popen.stdout
+                stderr = popen.stderr
                 if stderr is not None:
-                    sys.stderr.write(stderr)
+                    line = stderr.readline()
+                    if line != '':
+                        sys.stderr.write(line)
+                        sys.stderr.write('\n')
                 if stdout is not None:
                     line = stdout.readline()
                     if "%" in line:
@@ -75,8 +79,8 @@ class ScowSync:
     # transfer single file
 
     def __transfer_file(self, filepath):
-        # print(f'transfering file: {filepath}')
-        sys.stdout.write(f'transfering file: {filepath}\n')
+        print(f'transfering file: {filepath}')
+        # sys.stdout.write(f'transfering file: {filepath}\n')
         cmd = None
         src = os.path.join(os.path.split(self.sourcepath)[0], filepath)
         if self.__is_compressed(filepath):
@@ -94,8 +98,8 @@ class ScowSync:
 
     # transfer directory
     def __transfer_dir(self, dirpath):
-        # print(f'transfering dir: {dirpath}')
-        sys.stdout.write(f'transfering dir: {dirpath}\n')
+        print(f'transfering dir: {dirpath}')
+        # sys.stdout.write(f'transfering dir: {dirpath}\n')
         src = os.path.join(os.path.split(self.sourcepath)[0], dirpath)
         dst = os.path.join(self.destinationpath, os.path.split(dirpath)[0])
         cmd = f'rsync -az --progress  -e \'ssh -p {self.port} -o \'LogLevel=QUIET\'\' \
