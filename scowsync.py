@@ -31,9 +31,9 @@ class ScowSync:
                               ]
         self.file_queue = FileQueue()
         self.thread_pool = None
-        self.raw_cmd = f'scow-sync -a {address} -u {user} -s {sourcepath} -d {destinationpath} -m {max_depth} -p {port} -k {sshkey_path}'
+        self.raw_string = f'{address} {user} {sourcepath} {destinationpath}'
 
-        self.transfer_id = utils.gen_file_transfer_id(self.raw_cmd)
+        self.transfer_id = utils.gen_file_transfer_id(self.raw_string)
 
     # compress uncompressed files
     def __is_compressed(self, filename) -> bool:
