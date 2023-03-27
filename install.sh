@@ -16,3 +16,5 @@ mkdir /tmp/scow-sync
 touch /tmp/scow-sync/scow-sync.out
 touch /tmp/scow-sync/scow-sync.err
 chmod 777 /tmp/scow-sync
+chmod 777 /tmp/scow-sync/scow-sync.out
+chmod 777 /tmp/scow-sync/scow-sync.err
