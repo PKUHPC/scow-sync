@@ -14,8 +14,9 @@ if __name__ == '__main__':
 
     unique_id = utils.gen_file_transfer_id(cmd)
 
-    os.mkdir(os.path.join('/tmp/scow-sync', str(unique_id)), 0o777)
+    if not os.path.exists(os.path.join('/tmp/scow-sync', str(unique_id))):
+        os.mkdir(os.path.join('/tmp/scow-sync', str(unique_id)), 0o777)
 
-    popen = Popen(cmd, shell=True)
+    popen = Popen(cmd, shell=True, preexec_fn=os.setsid)
 
     sys.exit()
