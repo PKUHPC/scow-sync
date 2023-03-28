@@ -34,6 +34,7 @@ class ScowSync:
         self.raw_string = f'{address} {user} {sourcepath} {destinationpath}'
 
         self.transfer_id = utils.gen_file_transfer_id(self.raw_string)
+        self.base_path = os.path.expanduser('~/scow/.scow-sync')
 
     # compress uncompressed files
     def __is_compressed(self, filename) -> bool:
@@ -46,7 +47,7 @@ class ScowSync:
     # start rsync
     def __start_rsync(self, cmd, fullpath):
         output_dir_path = os.path.join(
-            '/tmp/scow-sync/', str(self.transfer_id))
+            self.base_path, str(self.transfer_id))
         output_file_path = os.path.join(
             output_dir_path, f'{os.path.basename(fullpath)}.out')
         popen = Popen(cmd, stdout=open(output_file_path, 'a',encoding='utf-8'), stderr=PIPE, universal_newlines=True, shell=True)
@@ -56,12 +57,11 @@ class ScowSync:
         if stderr:
             sys.stderr.write(stderr)
 
-        os.remove(output_file_path)
+        #os.remove(output_file_path)
 
     # transfer single file
     def __transfer_file(self, filepath):
         print(f'transfering file: {filepath}')
-        # sys.stdout.write(f'transfering file: {filepath}\n')
         cmd = None
         src = os.path.join(os.path.split(self.sourcepath)[0], filepath)
         if self.__is_compressed(filepath):
@@ -72,21 +72,18 @@ class ScowSync:
             cmd = f'rsync -az --progress -e \'ssh -p {self.port} -o \'LogLevel=QUIET\'\' \
                     {src} {self.user}@{self.address}:{os.path.join(self.destinationpath, filepath)} \
                     --partial --inplace'
-        # Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True)
         self.__start_rsync(cmd, src)
         return
 
     # transfer directory
     def __transfer_dir(self, dirpath):
         print(f'transfering dir: {dirpath}')
-        # sys.stdout.write(f'transfering dir: {dirpath}\n')
         src = os.path.join(os.path.split(self.sourcepath)[0], dirpath)
         dst = os.path.join(self.destinationpath, os.path.split(dirpath)[0])
         cmd = f'rsync -az --progress  -e \'ssh -p {self.port} -o \'LogLevel=QUIET\'\' \
                 {src} {self.user}@{self.address}:{dst} \
                 --partial --inplace'
 
-        # Popen(cmd, stdout=PIPE, universal_newlines=True, shell=True)
         self.__start_rsync(cmd, src)
         return
 
@@ -118,5 +115,5 @@ class ScowSync:
                 self.thread_pool.submit(
                     self.__transfer_file, entity_file.subpath)
         self.thread_pool.shutdown()
-        os.rmdir(os.path.join('/tmp/scow-sync/', str(self.transfer_id)))
+       # os.rmdir(os.path.join(self.base_path, str(self.transfer_id)))
         sys.exit()

@@ -49,7 +49,7 @@ def process_file(file_path):
         
 def traverse_folder(folder_path):
     '''
-    traverse /tmp/scow-sync
+    traverse ~/scow/.scow-sync
     '''
     progresses = []
     for root, dirs, files in os.walk(folder_path):
@@ -65,7 +65,7 @@ def traverse_folder(folder_path):
 
 if __name__ == '__main__':
 
-    TRANSFER_PATH = '/tmp/scow-sync'
+    TRANSFER_PATH = os.path.expanduser('~/scow/.scow-sync')
 
     progress = traverse_folder(TRANSFER_PATH)
     sys.stdout.write(json.dumps(traverse_folder(TRANSFER_PATH)))

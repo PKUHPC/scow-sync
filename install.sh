@@ -11,10 +11,4 @@ ln -s $local_path/scow-sync-query /usr/bin/scow-sync-query
 ln -s $local_path/scow-sync /usr/bin/scow-sync
 chmod +x /usr/bin/scow-sync-start
 chmod +x /usr/bin/scow-sync-query
-mkdir /tmp
-mkdir /tmp/scow-sync
-touch /tmp/scow-sync/scow-sync.out
-touch /tmp/scow-sync/scow-sync.err
-chmod 777 /tmp/scow-sync
-chmod 777 /tmp/scow-sync/scow-sync.out
-chmod 777 /tmp/scow-sync/scow-sync.err
+chmod +x /usr/bin/scow-sync

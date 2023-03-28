@@ -17,13 +17,11 @@ A file transfer system tool on SCOW
 
 Clone the repository in a directory that sudoer have access to, then execute`sudo bash install.sh`. 
 
-Attention that this will create /tmp/scow-sync directory which is used to stored the temp files of the transfer process.
-
 ## Usage
 
 ### start
 
-You can use the following command for transfer, but the command will return immediately and write the transfer ID(for your query, you can see next) and process ID to stdout.
+You can use the following command for transfer, but the command will return immediately and write the transfer ID(for your query, you can see next) and process ID to stdout. If you first execute the command, it will create the directory `~/scow/.scow-sync` to store the transfer information including the transferring log and error log.
 
 ```bash
 scow-sync-start [-h] [-a ADDRESS] [-u USER] [-s SOURCE] [-d DESTINATION] [-p PORT] [-k SSHKEY_PATH]
