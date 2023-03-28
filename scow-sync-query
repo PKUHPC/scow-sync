@@ -41,7 +41,7 @@ def process_file(file_path):
                 progress = progress_parts[1]
                 speed = progress_parts[2]
                 time = progress_parts[3]
-                return {"filename": filename, 'transfer_size': transfer_size, 'progress': progress, 'speed': speed, 'time': time}
+                return {"fileName": filename, 'transferSize': transfer_size, 'progress': progress, 'speed': speed, 'leftTime': time}
             else:
                 return None
         except CalledProcessError:
