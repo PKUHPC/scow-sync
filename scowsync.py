@@ -50,6 +50,9 @@ class ScowSync:
             self.base_path, str(self.transfer_id))
         output_file_path = os.path.join(
             output_dir_path, f'{os.path.basename(fullpath)}.out')
+        with open (output_file_path, 'a', encoding='utf-8') as file_stream:
+            # 第一行是关于接收集群和文件（文件夹）的父路径的信息
+            file_stream.write(f'{self.address} {os.path.dirname(fullpath)}\n')
         popen = Popen(cmd, stdout=open(output_file_path, 'a',encoding='utf-8'), stderr=PIPE, universal_newlines=True, shell=True)
 
         # 等待进程结束

@@ -15,7 +15,10 @@ def process_file(file_path):
         try:
             tail_progress = Popen(['tail', '-n', '2', file_path], stdout=PIPE, stderr=PIPE)
             stdout, stderr = tail_progress.communicate()
-            
+
+            head_progress = Popen(['head', '-n', '1', file_path], stdout=PIPE, stderr=PIPE)
+            stdout_head, stderr_head = head_progress.communicate()
+
             sys.stderr.write(stderr.decode('utf-8'))
             sys.stderr.flush()
 
@@ -27,7 +30,15 @@ def process_file(file_path):
                 
                 lines_list = lines.split('\n')
 
-                filename = lines_list[0]
+                base_name = lines_list[0]
+                
+                recv_address = ''
+                father_path = ''
+                if stdout_head != '':
+                    head_lines = stdout_head.decode('utf-8')
+                    head_lines_list = head_lines.split()
+                    recv_address = head_lines_list[0]
+                    father_path = head_lines_list[1]
                 
                 ## DEBUG
                 # progess_list = lines_list[1].split('\r')
@@ -35,13 +46,14 @@ def process_file(file_path):
                 # progress_line = progess_list[-1]
 
                 # progress_parts = progress_line.split()
-
+    
                 progress_parts = lines_list[1].split('\r')[-1].split()
+                file_path = os.path.join(father_path, base_name)
                 transfer_size = progress_parts[0]
                 progress = progress_parts[1]
                 speed = progress_parts[2]
                 time = progress_parts[3]
-                return {"fileName": filename, 'transferSize': transfer_size, 'progress': progress, 'speed': speed, 'leftTime': time}
+                return {"recvAddress":recv_address, "filePath": file_path, "transferSize": transfer_size, "progress": progress, "speed": speed, "leftTime": time}
             else:
                 return None
         except CalledProcessError:

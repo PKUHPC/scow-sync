@@ -13,6 +13,8 @@ A file transfer system tool on SCOW
 
 - psutil 5.9.4 
 
+- rsync >= 3.1.0
+
 ### install globally
 
 Clone the repository in a directory that sudoer have access to, then execute`sudo bash install.sh`. 
@@ -41,15 +43,31 @@ Optional arguments:
   
   `-p PORT, --port PORT`  port of the server
 
-  `-k SSHKEY_PATH, --sshkey_path PATH`  path to id_rsa file
+  `-k SSHKEY_PATH, --sshkey_path PATH`  path of private key
 
 ### query
 
-You can use the following command to view the real-time transfer process, including filename, tranfer_size, progress, speed and remaining time.
+You can use the following command to view the real-time transfer process.
 
 ```bash
 scow-sync-query
 ```
+
+It will return an array of json object like:
+
+```json
+[{
+  "recvAddress":recv_address, 
+  "filePath": file_path, 
+  "transferSize": transfer_size,
+  "progress": progress, 
+  "speed": speed, 
+  "leftTime": time
+}...]
+```
+
+
+
 
 
   
