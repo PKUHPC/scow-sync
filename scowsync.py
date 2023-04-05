@@ -1,9 +1,7 @@
 '''
 Transfer files from local to remote server on SCOW
 '''
-from io import TextIOWrapper
 import os
-import json
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
@@ -68,11 +66,11 @@ class ScowSync:
         cmd = None
         src = os.path.join(os.path.split(self.sourcepath)[0], filepath)
         if self.__is_compressed(filepath):
-            cmd = f'rsync -a --progress -e \'ssh -p {self.port} -o \'LogLevel=QUIET\'\' \
+            cmd = f'rsync -a --progress -e \'ssh -p {self.port} -i {self.sshkey_path} -o \'LogLevel=QUIET\'\' \
                     {src} {self.user}@{self.address}:{os.path.join(self.destinationpath, filepath)} \
                     --partial --inplace'
         else:
-            cmd = f'rsync -az --progress -e \'ssh -p {self.port} -o \'LogLevel=QUIET\'\' \
+            cmd = f'rsync -az --progress -e \'ssh -p {self.port} -i {self.sshkey_path} -o \'LogLevel=QUIET\'\' \
                     {src} {self.user}@{self.address}:{os.path.join(self.destinationpath, filepath)} \
                     --partial --inplace'
         self.__start_rsync(cmd, src)
@@ -83,7 +81,7 @@ class ScowSync:
         print(f'transfering dir: {dirpath}')
         src = os.path.join(os.path.split(self.sourcepath)[0], dirpath)
         dst = os.path.join(self.destinationpath, os.path.split(dirpath)[0])
-        cmd = f'rsync -az --progress  -e \'ssh -p {self.port} -o \'LogLevel=QUIET\'\' \
+        cmd = f'rsync -az --progress  -e \'ssh -p {self.port} -i {self.sshkey_path} -o \'LogLevel=QUIET\'\' \
                 {src} {self.user}@{self.address}:{dst} \
                 --partial --inplace'
 
