@@ -55,7 +55,7 @@ scow-sync-query
 
 It will return an array of json object like:
 
-```json
+```yaml
 [{
   "recvAddress": recv_address, 
   "filePath": file_path, 
