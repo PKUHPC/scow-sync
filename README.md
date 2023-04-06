@@ -57,12 +57,12 @@ It will return an array of json object like:
 
 ```json
 [{
-  "recvAddress":recv_address, 
+  "recvAddress": recv_address, 
   "filePath": file_path, 
   "transferSize": transfer_size,
   "progress": progress, 
   "speed": speed, 
-  "leftTime": time
+  "leftTime": time,
 }...]
 ```
 
