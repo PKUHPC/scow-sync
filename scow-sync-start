@@ -14,7 +14,7 @@ if __name__ == '__main__':
     args = ArgsParser().get_args_parser().parse_args()
 
     # 如果开启了check，则检查是否免密并立刻返回
-    if not args.check:
+    if args.check:
         if not os.path.exists(args.sshkey_path):
             sys.stdout.write('false')
         else:
