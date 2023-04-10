@@ -18,7 +18,7 @@ if __name__ == '__main__':
         if not os.path.exists(args.sshkey_path):
             sys.stdout.write('false')
         else:
-            cmd = f'ssh -p {args.port} -i {args.sshkey_path} {args.user}@{args.address} echo hello'
+            cmd = f'ssh -p {args.port} -i {args.sshkey_path} -o PreferredAuthentications=publickey,keyboard-interactive -o PubkeyAuthentication=yes {args.user}@{args.address} echo hello'
             popen = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
             # 等待子进程
             stdout, stderr = popen.communicate()
@@ -26,6 +26,7 @@ if __name__ == '__main__':
                 sys.stdout.write('false')
             else:
                 stdout_text = stdout.decode('utf-8')
+                last_line = stdout_text.splitlines()[-1]
                 if stdout_text != 'hello\n':
                     sys.stdout.write('false')
                 else:

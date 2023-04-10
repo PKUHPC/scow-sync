@@ -45,7 +45,9 @@ Optional arguments:
 
   `-k SSHKEY_PATH, --sshkey_path PATH`  path of private key
 
-  `-c, --check` check whether the private key is right
+  `-c, --check` check whether the private key is right and return true or false
+
+attention: If you want to use the `-c, --checK` parameter, please make sure that the key verification on the remote machine has a higher priority than password authentication.
 
 ### query
 

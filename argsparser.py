@@ -72,6 +72,7 @@ class ArgsParser:
         # check whether the key in scow-sync-ssh is right
         self.parser.add_argument(
             '-c', '--check',
+            action='store_true',
             help='check whether the key in scow-sync-ssh is right'
         )
        
