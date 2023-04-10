@@ -45,6 +45,8 @@ Optional arguments:
 
   `-k SSHKEY_PATH, --sshkey_path PATH`  path of private key
 
+  `-c, --check` check whether the private key is right
+
 ### query
 
 You can use the following command to view the real-time transfer process.

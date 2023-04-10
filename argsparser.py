@@ -66,7 +66,13 @@ class ArgsParser:
         self.parser.add_argument(
             '-k', '--sshkey-path',
             type=str,
-            help='path of the sshkey file, default is'
+            help='path of the private key'
+        )
+        
+        # check whether the key in scow-sync-ssh is right
+        self.parser.add_argument(
+            '-c', '--check',
+            help='check whether the key in scow-sync-ssh is right'
         )
        
         return self.parser
