@@ -76,14 +76,13 @@ def traverse_folder(folder_path):
             for file in os.listdir(transfer_id):
                 file_path = os.path.join(transfer_id, file)
                 progress_info = process_file(file_path)
-                if progress:
+                if progress_info:
                     progresses.append(progress_info)
     return progresses
 
 
 if __name__ == '__main__':
 
-    progress = traverse_folder(SCOWSYNC_PATH)
     sys.stdout.write(json.dumps(traverse_folder(SCOWSYNC_PATH)))
     sys.stdout.flush()
 
