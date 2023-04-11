@@ -8,8 +8,8 @@ if [[ -e /etc/os-release ]]; then
         apt-get install -y rsync python3 pip3
     elif [[ $ID == "centos" || $ID == "rhel" ]]; then
         yum install -y rsync python3 pip3
-    elif [[$ID == "alpine"]]; then
-        apk install -y rsync python3 pip3
+    elif [[ $ID == "alpine" ]]; then
+        apk add -y rsync python3 pip3
     else
         echo "Unsupported Linux distribution"
         exit 1
