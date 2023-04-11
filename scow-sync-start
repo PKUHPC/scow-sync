@@ -4,66 +4,61 @@ Start a file transfer asynchronously
 '''
 import os
 import sys
-from subprocess import Popen, PIPE
+from subprocess import PIPE, Popen
+
 import utils
-from argsparser import ArgsParser
+from argsparser import StartArgsParser
+from config import SCOWSYNC_PATH, LOG_PATH, ERROR_PATH
 
 if __name__ == '__main__':
 
     # 获取参数
-    args = ArgsParser().get_args_parser().parse_args()
+    args = StartArgsParser().get_args_parser().parse_args()
 
     # 如果开启了check，则检查是否免密并立刻返回
     if args.check:
         if not os.path.exists(args.sshkey_path):
             sys.stdout.write('false')
         else:
-            cmd = f'ssh -p {args.port} -i {args.sshkey_path} -o PreferredAuthentications=publickey,keyboard-interactive -o PubkeyAuthentication=yes {args.user}@{args.address} echo hello'
+            cmd = f'ssh -p {args.port} -i {args.sshkey_path} \
+                -o PreferredAuthentications=publickey,keyboard-interactive -o PubkeyAuthentication=yes \
+                {args.user}@{args.address} echo hello'
             popen = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
             # 等待子进程
             stdout, stderr = popen.communicate()
             if not stdout:
                 sys.stdout.write('false')
             else:
-                stdout_text = stdout.decode('utf-8')
-                last_line = stdout_text.splitlines()[-1]
-                if stdout_text != 'hello\n':
+                last_line = stdout.decode('utf-8').splitlines()[-1]
+                print(last_line)
+                if last_line != 'hello':
                     sys.stdout.write('false')
                 else:
                     sys.stdout.write('true')
         sys.exit(0)
-            
-        
 
     # 初始化保存日志的文件夹
-    SCOW_PATH = os.path.expanduser('~/scow')
-    if not os.path.exists(SCOW_PATH):
-        os.mkdir(SCOW_PATH, 0o700)
-
-    SCOW_SYNC_PATH = os.path.join(SCOW_PATH, '.scow-sync')
-    if not os.path.exists(SCOW_SYNC_PATH):
-        os.mkdir(SCOW_SYNC_PATH, 0o700)
-
-    OUT_PATH = os.path.join(SCOW_SYNC_PATH, 'scow-sync.out')
-    ERROR_PATH = os.path.join(SCOW_SYNC_PATH, 'scow-sync.err')
-    if not os.path.exists(OUT_PATH):
-        with open(OUT_PATH,'a',encoding='utf-8') as out:
+    if not os.path.exists(SCOWSYNC_PATH):
+        os.makedirs(SCOWSYNC_PATH, 0o700)
+    if not os.path.exists(LOG_PATH):
+        with open(LOG_PATH, 'a', encoding='utf-8') as out:
             out.write('This is the tranferring log for scow-sync\n')
-        os.chmod(OUT_PATH, 0o700)
+        os.chmod(LOG_PATH, 0o700)
     if not os.path.exists(ERROR_PATH):
-        with open(ERROR_PATH,'a',encoding='utf-8') as err:
+        with open(ERROR_PATH, 'a', encoding='utf-8') as err:
             err.write('This is the error log for scow-sync\n')
         os.chmod(ERROR_PATH, 0o700)
-    
-    # 子进程执行scow-sync
 
-    cmd = f'scow-sync -a {args.address} -u {args.user} -s {args.source} -d {args.destination} -m {args.max_depth} -p {args.port} -k {args.sshkey_path}'
+    # 子进程执行scow-sync
+    cmd = f'scow-sync -a {args.address} -u {args.user} -s {args.source} -d {args.destination} \
+        -m {args.max_depth} -p {args.port} -k {args.sshkey_path}'
     raw_string = f'{args.address} {args.user} {args.source} {args.destination}'
     unique_id = utils.gen_file_transfer_id(raw_string)
 
-    if not os.path.exists(os.path.join(SCOW_SYNC_PATH, str(unique_id))):
-        os.mkdir(os.path.join(SCOW_SYNC_PATH, str(unique_id)), 0o700)
+    if not os.path.exists(os.path.join(SCOWSYNC_PATH, str(unique_id))):
+        os.mkdir(os.path.join(SCOWSYNC_PATH, str(unique_id)), 0o700)
 
-    popen = Popen(cmd, shell=True, stdout=open(OUT_PATH,'a',encoding='utf-8'), stderr=open(ERROR_PATH,'a',encoding='utf-8'))
+    popen = Popen(cmd, shell=True, stdout=open(
+        LOG_PATH, 'a', encoding='utf-8'), stderr=open(ERROR_PATH, 'a', encoding='utf-8'))
 
     sys.exit()

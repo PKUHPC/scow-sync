@@ -1,0 +1,54 @@
+#!/usr/bin/python3
+'''
+Kill a file transfer
+'''
+import psutil
+from argsparser import TerminateArgsParser
+from config import LOG_PATH, ERROR_PATH
+from ssh import SSH
+
+def find_dst_path(cmd: str, address: str, user: str):
+    '''
+    从命令中解析出目的路径
+    '''
+    cmd_list = cmd.split()
+    dst_path = ''
+    for content in cmd_list:
+        if '@' in content and ':' in content:
+            cmd_user = content.split('@')[0]
+            cmd_address = content.split('@')[1].split(':')[0]
+            if cmd_user == user and cmd_address == address:
+                dst_path = content.split(':')[1]
+                break
+    return dst_path
+      
+
+def close_process_by_filepath(filepath: str, output_path: str, error_path: str, address: str, user: str): 
+    '''
+    关闭命令中含有该文件路径的进程，返回目的路径(是个列表，可能一个用户开启了多次传输，传输该文件)
+    '''
+    dst_path = ''
+    for process in psutil.process_iter():
+        try:
+            cmdline = process.cmdline()
+            if filepath in cmdline:
+                with open(output_path, 'a', encoding='utf-8') as file_stream:
+                    file_stream.write(f'kill transfer: {cmdline}\n')
+                process.terminate()
+                dst_path = find_dst_path(' '.join(cmdline), address, user) # 这里不break的原因是因为，对于scow-sync开启的rsync服务有三个进程: /bin/sh rsync, rsync, ssh
+        except Exception as exception:
+            with open(error_path, 'a', encoding='utf-8') as file_stream:
+                file_stream.write(f'kill transfer error: {exception}\n')
+    return dst_path
+
+if __name__ == '__main__':
+
+    # 获取参数
+    args = TerminateArgsParser().get_args_parser().parse_args()
+
+    # 停止进程
+    dst_path = close_process_by_filepath(args.source, LOG_PATH, ERROR_PATH, args.address, args.user)
+
+    # 删去服务器上的临时文件
+    ssh = SSH(args.address, args.user, args.sshkey_path, args.port)
+    ssh.ssh_rm_file(dst_path)

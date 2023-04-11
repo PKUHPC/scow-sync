@@ -16,7 +16,8 @@ class SSH:
         self.user = user
         self.port = port
         self.__login(address, user, sshkey_path, port)
-
+    
+    # pylint: disable=W0613
     def __new__(cls, *args, **kwargs):
         if not hasattr(SSH, "_instance"):
             with SSH._instance_lock:
@@ -37,3 +38,12 @@ class SSH:
             self.ssh.exec_command(cmd)
         except SystemError as exception:
             print(f"ssh execute error:{cmd}, exception:{str(exception)}")
+               
+    def ssh_rm_file(self, filepath):
+        '''
+        delete the file on remote server and don't catch error when the file is not exist
+        '''
+        try:
+            self.ssh.exec_command(f'rm -rf {filepath}')
+        except SystemError as exception:
+            print(f'ssh execute error: rm -rf {filepath}, exception:{str(exception)}')

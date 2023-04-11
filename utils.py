@@ -13,4 +13,3 @@ def gen_file_transfer_id(cmd: str):
     modulus = 10**9 + 7
     unique_id = hash_value % modulus
     return unique_id
-    

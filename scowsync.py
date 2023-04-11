@@ -9,6 +9,7 @@ from subprocess import Popen, PIPE
 import utils
 from filequeue import FileQueue, EntityFile
 from ssh import SSH
+from config import SCOWSYNC_PATH
 
 
 class ScowSync:
@@ -32,7 +33,7 @@ class ScowSync:
         self.raw_string = f'{address} {user} {sourcepath} {destinationpath}'
 
         self.transfer_id = utils.gen_file_transfer_id(self.raw_string)
-        self.base_path = os.path.expanduser('~/scow/.scow-sync')
+        self.base_path = SCOWSYNC_PATH
 
     # compress uncompressed files
     def __is_compressed(self, filename) -> bool:
@@ -54,6 +55,7 @@ class ScowSync:
         popen = Popen(cmd, stdout=open(output_file_path, 'a',encoding='utf-8'), stderr=PIPE, universal_newlines=True, shell=True)
 
         # 等待进程结束
+        # pylint: disable=W0612
         stdout, stderr = popen.communicate()
         if stderr:
             sys.stderr.write(stderr)

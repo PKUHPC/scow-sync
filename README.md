@@ -21,6 +21,10 @@ Clone the repository in a directory that sudoer have access to, then execute`sud
 
 ## Usage
 
+### config
+
+You can edit the `config.py` to configure the default path. But you will better edit the `SCOWSYNC_PATH` with `~/` that each user will have his own directory.
+
 ### start
 
 You can use the following command for transfer, but the command will return immediately and write the transfer ID(for your query, you can see next) and process ID to stdout. If you first execute the command, it will create the directory `~/scow/.scow-sync` to store the transfer information including the transferring log and error log.
@@ -70,6 +74,32 @@ It will return an array of json object like:
 }...]
 ```
 
+### terminate
+
+You can use the following command to terminate the transfer process. But you should note that the shutdown of the process is at the granularity of the rsync service. 
+
+For example, you are using an rsync service to transfer a folder dir, which consists of two files file1 and file2. When using `-s --source` as the parameter to terminate the transmission with `-s dir/file1`, it actually closes the transmission of the entire folder dir, which is equivalent to `-s dir`.
+To prevent this from happening, please increase `-m --max-depth` when starting `scow-sync-start` transmission to increase the parallel granularity.
+
+By default, rsync has enabled resuming uploads, that is, the receiver will keep the temporary files that were uploaded. But the `scow-sync-terminate` command will log to the receiving server to delete the temporary files.
+
+```bash
+scow-sync-terminate [-h] [-a ADDRESS] [-u USER] [-s SOURCE] [-p PORT] [-k SSHKEY_PATH]
+```
+
+Optional arguments:
+
+  `-h, --help`  show this help message and exit
+
+  `-a ADDRESS, --address ADDRESS` address of the server
+
+  `-u USER, --user USER`  username for logging in to the server
+
+  `-s SOURCE, --source SOURCE`  path to the source file or directory
+
+  `-p PORT, --port PORT`  port of the server
+
+  `-k SSHKEY_PATH, --sshkey_path PATH`  path of private key
 
 
 

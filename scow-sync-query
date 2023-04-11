@@ -6,6 +6,8 @@ import json
 import os
 import sys
 from subprocess import PIPE, CalledProcessError, Popen
+from config import SCOWSYNC_PATH
+
 
 def process_file(file_path):
     '''
@@ -13,10 +15,13 @@ def process_file(file_path):
     '''
     if os.path.exists(file_path):
         try:
-            tail_progress = Popen(['tail', '-n', '2', file_path], stdout=PIPE, stderr=PIPE)
+            tail_progress = Popen(
+                ['tail', '-n', '2', file_path], stdout=PIPE, stderr=PIPE)
             stdout, stderr = tail_progress.communicate()
 
-            head_progress = Popen(['head', '-n', '1', file_path], stdout=PIPE, stderr=PIPE)
+            head_progress = Popen(
+                ['head', '-n', '1', file_path], stdout=PIPE, stderr=PIPE)
+            # pylint: disable=W0612
             stdout_head, stderr_head = head_progress.communicate()
 
             sys.stderr.write(stderr.decode('utf-8'))
@@ -24,14 +29,14 @@ def process_file(file_path):
 
             # stdout: filename\n\r xxx \r xxx \r xxx \r
             if stdout != '':
-                lines =  stdout.decode('utf-8')
-                if '%' not in lines: # 还没开始打印进度
+                lines = stdout.decode('utf-8')
+                if '%' not in lines:  # 未开始打印进度
                     return None
-                
+
                 lines_list = lines.split('\n')
 
                 base_name = lines_list[0]
-                
+
                 recv_address = ''
                 father_path = ''
                 if stdout_head != '':
@@ -39,48 +44,47 @@ def process_file(file_path):
                     head_lines_list = head_lines.split()
                     recv_address = head_lines_list[0]
                     father_path = head_lines_list[1]
-                
-                ## DEBUG
-                # progess_list = lines_list[1].split('\r')
- 
-                # progress_line = progess_list[-1]
 
-                # progress_parts = progress_line.split()
-    
                 progress_parts = lines_list[1].split('\r')[-1].split()
                 file_path = os.path.join(father_path, base_name)
                 transfer_size = progress_parts[0]
-                progress = progress_parts[1]
+                transfer_progress = progress_parts[1]
                 speed = progress_parts[2]
                 time = progress_parts[3]
-                return {"recvAddress":recv_address, "filePath": file_path, "transferSize": transfer_size, "progress": progress, "speed": speed, "leftTime": time}
+                return {"recvAddress": recv_address,
+                        "filePath": file_path, 
+                        "transferSize": transfer_size, 
+                        "progress": transfer_progress, 
+                        "speed": speed, 
+                        "leftTime": time
+                        }
             else:
                 return None
         except CalledProcessError:
             return None
-        
+
+
 def traverse_folder(folder_path):
     '''
-    traverse ~/scow/.scow-sync
+    traverse SCOWSYNC_PATH
     '''
     progresses = []
+    # pylint: disable=W0612
     for root, dirs, files in os.walk(folder_path):
-        for dir in dirs:
-            transfer_id = os.path.join(root, dir)
+        for directory in dirs:
+            transfer_id = os.path.join(root, directory)
             for file in os.listdir(transfer_id):
                 file_path = os.path.join(transfer_id, file)
-                progress = process_file(file_path)
+                progress_info = process_file(file_path)
                 if progress:
-                    progresses.append(progress)
+                    progresses.append(progress_info)
     return progresses
 
 
 if __name__ == '__main__':
 
-    TRANSFER_PATH = os.path.expanduser('~/scow/.scow-sync')
-
-    progress = traverse_folder(TRANSFER_PATH)
-    sys.stdout.write(json.dumps(traverse_folder(TRANSFER_PATH)))
+    progress = traverse_folder(SCOWSYNC_PATH)
+    sys.stdout.write(json.dumps(traverse_folder(SCOWSYNC_PATH)))
     sys.stdout.flush()
 
     sys.exit()
