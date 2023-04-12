@@ -5,7 +5,7 @@ A file transfer system tool on SCOW
 
 ### dependencies
 
-- python3
+- python > 3.6
  
 - pip3
 
