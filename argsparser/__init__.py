@@ -119,19 +119,5 @@ class TerminateArgsParser:
             type=str,
             help='path to the source file or directory'
         )
-
-        # ssh port
-        self.parser.add_argument(
-            '-p', '--port',
-            type=int,
-            help='ssh port of the server'
-        )
-
-        # sshpassword-path
-        self.parser.add_argument(
-            '-k', '--sshkey-path',
-            type=str,
-            help='path of the private key'
-        )
-
+        
         return self.parser

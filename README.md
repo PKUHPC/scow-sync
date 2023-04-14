@@ -97,9 +97,6 @@ Optional arguments:
 
   `-s SOURCE, --source SOURCE`  path to the source file or directory
 
-  `-p PORT, --port PORT`  port of the server
-
-  `-k SSHKEY_PATH, --sshkey_path PATH`  path of private key
 
 
 
