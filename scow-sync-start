@@ -30,7 +30,7 @@ if __name__ == '__main__':
                 sys.stdout.write('false')
             else:
                 last_line = stdout.decode('utf-8').splitlines()[-1]
-                print(last_line)
+                # print(last_line)
                 if last_line != 'hello':
                     sys.stdout.write('false')
                 else:
