@@ -40,7 +40,7 @@ def __parse_cmdline(cmdline):
 
 def close_process_by_filepath(filepath: str, output_path: str, error_path: str, address: str, user: str):
     '''
-    关闭命令中含有该文件路径的进程，返回该进程命令中的{exclude_files: [...exclude_files], dst_path: destination_path}
+    关闭命令中含有该文件路径的进程
     '''
     for process in psutil.process_iter():
         try:
