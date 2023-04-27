@@ -23,7 +23,11 @@ Clone the repository in a directory that sudoer have access to, then execute`sud
 
 ### config
 
-You can edit the `config.py` to configure the default path. But you will better edit the `SCOWSYNC_PATH` with `~/` that each user will have his own directory.
+You can edit the `config.py` to configure the default path. 
+
+Edit the `SHEBANG_PATH` to use the interpreter that you want. If you update the `SHEBANG_PATH`, you must execute the `sudo bash install.sh update` to update the shebang of scow-sync, scow-sync-query, scow-sync-start, scow-sync-terminate.
+
+You would better edit the `SCOWSYNC_PATH` with `~/` that each user will have his own directory.
 
 ### start
 
