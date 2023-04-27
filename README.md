@@ -102,7 +102,12 @@ Optional arguments:
   `-s SOURCE, --source SOURCE`  path to the source file or directory
 
 
+### performance
 
+Through the WANem wide area network simulator, the simulated test environment has a bandwidth of **100Mbps** and a delay of **50ms**.
 
+Through the `dd` command, randomly generate many files with a size of 20MB from `/dev/urandom`. Compare the time it takes rsync and scow-sync to transfer different numbers of files.
+
+![Performance Test](scow_sync_performance.png "Performance Test")
 
   
