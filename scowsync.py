@@ -118,6 +118,5 @@ class ScowSync:
                 self.thread_pool.submit(
                     self.__transfer_file, entity_file.subpath)
         self.thread_pool.shutdown()
-        if os.path.exists(os.path.join(self.base_path, str(self.transfer_id))):
-            os.rmdir(os.path.join(self.base_path, str(self.transfer_id)))
+        os.rmdir(os.path.join(self.base_path, str(self.transfer_id)))
         sys.exit()
