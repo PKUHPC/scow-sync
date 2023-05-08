@@ -52,11 +52,6 @@ if __name__ == '__main__':
     # 子进程执行scow-sync
     cmd = f'scow-sync -a {args.address} -u {args.user} -s {args.source} -d {args.destination} \
         -m {args.max_depth} -p {args.port} -k {args.sshkey_path}'
-    raw_string = f'{args.address} {args.user} {args.source} {args.destination}'
-    unique_id = utils.gen_file_transfer_id(raw_string)
-
-    if not os.path.exists(os.path.join(SCOWSYNC_PATH, str(unique_id))):
-        os.mkdir(os.path.join(SCOWSYNC_PATH, str(unique_id)), 0o700)
 
     popen = Popen(cmd, shell=True, stdout=open(
         LOG_PATH, 'a', encoding='utf-8'), stderr=open(ERROR_PATH, 'a', encoding='utf-8'))

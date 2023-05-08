@@ -4,11 +4,20 @@ Code entry to run the scow-sync
 '''
 from argsparser import StartArgsParser
 from scowsync import ScowSync
+import utils
+import os
+from config import SCOWSYNC_PATH
 
 # ok for file transfer
 if __name__ == '__main__':
     parser = StartArgsParser()
     args = parser.get_args_parser().parse_args()
+
+    raw_string = f'{args.address} {args.user} {args.source} {args.destination}'
+    unique_id = utils.gen_file_transfer_id(raw_string)
+    if not os.path.exists(os.path.join(SCOWSYNC_PATH, str(unique_id))):
+        os.mkdir(os.path.join(SCOWSYNC_PATH, str(unique_id)), 0o700)
+        
     scow = ScowSync(args.address, args.user, args.source, args.destination,
                     args.max_depth, args.port, args.sshkey_path)
     scow.transfer_files()
