@@ -9,7 +9,7 @@ from subprocess import Popen, PIPE
 import utils
 from filequeue import FileQueue, EntityFile
 from ssh import SSH
-from config import SCOWSYNC_PATH
+from config import SCOWSYNC_PATH, THREADS
 
 
 class ScowSync:
@@ -100,7 +100,7 @@ class ScowSync:
         '''
         thread_num = min(self.file_queue.add_all_to_queue(
             self.sourcepath, self.max_depth),
-            3
+            THREADS
         )
 
         self.thread_pool = ThreadPoolExecutor(
