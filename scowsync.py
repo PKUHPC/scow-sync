@@ -9,7 +9,7 @@ from subprocess import Popen, PIPE
 import utils
 from filequeue import FileQueue, EntityFile
 from ssh import SSH
-from config import SCOWSYNC_PATH
+from config import SCOWSYNC_PATH, THREADS
 
 
 class ScowSync:
@@ -99,7 +99,7 @@ class ScowSync:
         run to transfer files
         '''
         thread_num = min(self.file_queue.add_all_to_queue(
-            self.sourcepath, self.max_depth), 3)
+            self.sourcepath, self.max_depth), THREADS)
 
         self.thread_pool = ThreadPoolExecutor(
             thread_num, thread_name_prefix='scow-sync')
