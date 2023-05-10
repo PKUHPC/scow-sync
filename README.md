@@ -27,11 +27,11 @@ You can edit the `config.py` to configure the default path.
 
 Edit the `SHEBANG_PATH` to use the interpreter that you want. If you update the `SHEBANG_PATH`, you must execute the `sudo bash install.sh update` to update the shebang of scow-sync, scow-sync-query, scow-sync-start, scow-sync-terminate.
 
-You would better edit the `SCOWSYNC_PATH` with `~/` that each user will have his own directory.
+You'd better edit the `SCOWSYNC_PATH` with `~/` that each user will have his own directory.
 
 ### start
 
-You can use the following command for transfer, but the command will return immediately and write the transfer ID(for your query, you can see next) and process ID to stdout. If you first execute the command, it will create the directory `~/scow/.scow-sync` to store the transfer information including the transferring log and error log.
+You can use the following command for transfer, but the command will return immediately. That is, it starts a transfer in the background. If you first execute the command, it will create the directory `SCOWSYNC_PATH`, file `LOG_PATH` and file `ERROR_PATH` to store the transfer information including the transferring log and error log. You can configure these paths in the `config.py`.
 
 ```bash
 scow-sync-start [-h] [-a ADDRESS] [-u USER] [-s SOURCE] [-d DESTINATION] [-p PORT] [-k SSHKEY_PATH]
@@ -39,7 +39,7 @@ scow-sync-start [-h] [-a ADDRESS] [-u USER] [-s SOURCE] [-d DESTINATION] [-p POR
 
 Optional arguments:
 
-  `-h, --help`  show this help message and exit
+  `-h, --help`  show help message and exit
 
   `-a ADDRESS, --address ADDRESS` address of the server
 
@@ -55,7 +55,11 @@ Optional arguments:
 
   `-c, --check` check whether the private key is right and return true or false
 
-attention: If you want to use the `-c, --checK` parameter, please make sure that the key verification on the remote machine has a higher priority than password authentication.
+Attention: 
+
+1. If you want to use the `-c, --check` parameter, please make sure that the key verification on the remote machine has a higher priority than password authentication.
+   
+2. In fact, the `scow-sync-start` command will create a directory which is named by the **Transfer Id** of this time to store the infomation include progress, speed and so on. You can use the `scow-sync-query` command to view the transfer information.
 
 ### query
 
@@ -82,10 +86,9 @@ It will return an array of json object like:
 
 You can use the following command to terminate the transfer process. But you should note that the shutdown of the process is at the granularity of the rsync service. 
 
-For example, you are using an rsync service to transfer a folder dir, which consists of two files file1 and file2. When using `-s --source` as the parameter to terminate the transmission with `-s dir/file1`, it actually closes the transmission of the entire folder dir, which is equivalent to `-s dir`.
-To prevent this from happening, please increase `-m --max-depth` when starting `scow-sync-start` transmission to increase the parallel granularity.
+For example, you are using an rsync service to transfer a folder dir, which consists of file1 and file2. When using `-s --source` as the parameter to terminate the transmission with `-s dir/file1`, it actually closes the transmission of the entire folder dir, which is equivalent to `-s dir`.
 
-By default, rsync has enabled resuming uploads, that is, the receiver will keep the temporary files that were uploaded. But the `scow-sync-terminate` command will log to the receiving server to delete the temporary files.
+To prevent this from happening, please increase `-m --max-depth` when starting `scow-sync-start` transmission to increase the parallel granularity.
 
 ```bash
 scow-sync-terminate [-h] [-a ADDRESS] [-u USER] [-s SOURCE] [-p PORT] [-k SSHKEY_PATH]
