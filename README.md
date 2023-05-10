@@ -31,6 +31,8 @@ You'd better edit the `SCOWSYNC_PATH` with `~/` that each user will have his own
 
 ### start
 
+#### background
+
 You can use the following command for transfer, but the command will return immediately. That is, it starts a transfer in the background. If you first execute the command, it will create the directory `SCOWSYNC_PATH`, file `LOG_PATH` and file `ERROR_PATH` to store the transfer information including the transferring log and error log. You can configure these paths in the `config.py`.
 
 ```bash
@@ -60,6 +62,10 @@ Attention:
 1. If you want to use the `-c, --check` parameter, please make sure that the key verification on the remote machine has a higher priority than password authentication.
    
 2. In fact, the `scow-sync-start` command will create a directory which is named by the **Transfer Id** of this time to store the infomation include progress, speed and so on. You can use the `scow-sync-query` command to view the transfer information.
+
+#### frontground
+
+Just replace the `scow-sync-start` command with `scow-sync`. It will also store the transferring infomation in `SCOWSYNC_PATH`.
 
 ### query
 
