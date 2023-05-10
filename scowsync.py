@@ -44,7 +44,7 @@ class ScowSync:
         return False
 
     # start rsync
-    def __start_rsync(self, cmd, fullpath):
+    def __start_rsync(self, cmd, fullpath, times):
         output_dir_path = os.path.join(
             self.base_path, str(self.transfer_id))
         output_file_path = os.path.join(
@@ -57,8 +57,12 @@ class ScowSync:
         # 等待进程结束
         # pylint: disable=W0612
         stdout, stderr = popen.communicate()
-        if stderr:
-            sys.stderr.write(stderr)
+        if times < 3:
+            if stderr:
+                self.__start_rsync(cmd, fullpath, times+1)
+        else:
+            if stderr:
+                sys.stderr.write(stderr)
 
         os.remove(output_file_path)
 
@@ -75,7 +79,7 @@ class ScowSync:
             cmd = f'rsync -az --progress -e \'ssh -p {self.port} -i {self.sshkey_path} -o \'LogLevel=QUIET\'\' \
                     {src} {self.user}@{self.address}:{os.path.join(self.destinationpath, filepath)} \
                     --partial --inplace'
-        self.__start_rsync(cmd, src)
+        self.__start_rsync(cmd, src, 0)
         return
 
     # transfer directory
@@ -87,7 +91,7 @@ class ScowSync:
                 {src} {self.user}@{self.address}:{dst} \
                 --partial --inplace'
 
-        self.__start_rsync(cmd, src)
+        self.__start_rsync(cmd, src, 0)
         return
 
     def transfer_files(self):
