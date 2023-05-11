@@ -2,6 +2,7 @@
 '''
 Kill a file transfer
 '''
+import sys
 import signal
 import psutil
 from argsparser import TerminateArgsParser
@@ -12,16 +13,7 @@ def __parse_cmdline(cmdline):
     '''
     从命令中解析出[user, address, src_path, dst_path]
     '''
-    info = {'rsync': False, 
-            'user': '',
-            'address': '', 
-            'src_path': '', 
-            'dst_path': ''
-        }
-
-    if cmdline[0] != 'rsync':
-        return info
-    info['rsync'] = True
+    info = {'user': '', 'address': '', 'src_path': '', 'dst_path': ''}
 
     # pylint: disable=C0200
     for index in range(len(cmdline)):
@@ -37,27 +29,44 @@ def __parse_cmdline(cmdline):
 
     return info
 
+def find_process(filepath: str, address: str, user: str):
+    '''
+    找到对应的rsync进程。对于一个采用ssh协议传输的rsync进程，其结构通常是:
+    1  |——/bin sh -c rsync
+    2   |——rsync
+    3    |——ssh
+    需要关闭的是2
+    '''
+    rsync_process = None 
+    cmd_info = None
+    for process in psutil.process_iter():
+        cmdline = process.cmdline()
+        if cmdline[0] != 'rsync':
+            continue
+        else:
+            # 检查address, user, src_path是否对的上
+            cmd_info = __parse_cmdline(cmdline)
+            if cmd_info['user'] == user and cmd_info['address'] == address and cmd_info['src_path'] in filepath:
+                rsync_process = process
+                break
+            continue
+    return rsync_process, cmd_info  
 
 def close_process_by_filepath(filepath: str, output_path: str, error_path: str, address: str, user: str):
     '''
     关闭命令中含有该文件路径的进程
     '''
-    for process in psutil.process_iter():
-        try:
-            cmdline = process.cmdline()
-            cmd_info = __parse_cmdline(cmdline)
-
-            # 当命令中含有rsync、文件路径，并且目的地址对应的上、用户对应的上
-            if cmd_info['rsync'] and cmd_info['user'] == user and cmd_info['address'] == address and cmd_info['src_path'] in filepath:
-                # print(cmd_info)
-                process.send_signal(signal.SIGINT)
-                with open(output_path, 'a', encoding='utf-8') as file_stream:
-                    file_stream.write(f'kill transfer: {cmdline}\n')
-                break
-        except Exception as exception:
-            with open(error_path, 'a', encoding='utf-8') as file_stream:
-                file_stream.write(f'kill transfer error: {exception}\n')
-
+    process, cmd_info = find_process(filepath, address, user)
+    if process is None:
+        with open(error_path, 'a', encoding='utf-8') as file_stream:
+            file_stream.write(f'kill transfer error: no process found\n')
+        sys.stderr.write(f'kill transfer error: no process found\n')
+        sys.stderr.flush()
+        sys.exit(-1)
+    else:
+        process.send_signal(signal.SIGINT)
+        with open(output_path, 'a', encoding='utf-8') as file_stream:
+            file_stream.write(f'kill transfer: {cmd_info}\n')
 
 if __name__ == '__main__':
 
@@ -67,3 +76,5 @@ if __name__ == '__main__':
     # 停止进程
     close_process_by_filepath(
         args.source, LOG_PATH, ERROR_PATH, args.address, args.user)
+    
+    sys.exit()
