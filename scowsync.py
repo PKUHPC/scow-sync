@@ -58,7 +58,7 @@ class ScowSync:
         # pylint: disable=W0612
         stdout, stderr = popen.communicate()
         if times < 3:
-            if stderr:
+            if popen.returncode == 255:
                 self.__start_rsync(cmd, fullpath, times+1)
         else:
             if stderr:
