@@ -4,7 +4,6 @@ Transfer files from local to remote server on SCOW
 import os
 import sys
 from concurrent.futures import ThreadPoolExecutor
-from multiprocessing import cpu_count
 from subprocess import Popen, PIPE
 import utils
 from filequeue import FileQueue, EntityFile
