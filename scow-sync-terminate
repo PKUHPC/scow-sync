@@ -16,7 +16,7 @@ def __parse_cmdline(cmdline):
     '''
     从命令中解析出[user, address, src_path, dst_path, exclude]
     '''
-    info = {'user': '', 'address': '', 'src_path': '', 'dst_path': ''}
+    info = {'user': '', 'address': '', 'src_path': '', 'dst_path': '', 'exclude': ''}
 
     # pylint: disable=C0200
     for index in range(len(cmdline)):
@@ -28,6 +28,9 @@ def __parse_cmdline(cmdline):
             info['dst_path'] = content.split(':')[1]
             # 解析 src_path，即user@addtess:dst_path的前面
             info['src_path'] = cmdline[index - 1]
+        # 解析exclude
+        if content == '--exclude':
+            info['exclude'] += f'{cmdline[index + 1]} '
 
     return info
 
@@ -52,6 +55,14 @@ def find_process(filepath: str, address: str, user: str):
             cmd_info = __parse_cmdline(cmdline)
             if cmd_info['user'] == user and cmd_info['address'] == address and cmd_info['src_path'] in filepath: # 注意，这个地方是子集
                 rsync_process = process
+                # cmd_raw需要做进一步处理，因为rsync子进程中的ssh -p xx -i xx -o xx 没有加引号需要加引号
+                print(cmdline)
+                for index in range(len(cmdline)):
+                    context = cmdline[index]
+                    if context == '-e':
+                        cmdline[index + 1] = f"\'{cmdline[index + 1]}\'"
+                        continue
+                        break
                 cmd_raw = ' '.join(cmdline)
                 break
             continue
@@ -62,11 +73,15 @@ def __restart_rsync(transfer_id, cmd, cmd_info, error_path):
     重启rsync进程
     '''
     output_dir_path = os.path.join(SCOWSYNC_PATH, str(transfer_id))
+    if not os.path.exists(output_dir_path):
+        os.mkdir(output_dir_path, 0o700)
     output_file_path = os.path.join(output_dir_path, os.path.basename(f"{cmd_info['src_path']}.out"))
     with open(output_file_path, 'a', encoding='utf-8') as file_stream:
         # 第一行是关于接收集群和文件（文件夹）的父路径的信息
             file_stream.write(f"{cmd_info['address']} {os.path.dirname(cmd_info['src_path'])}\n")
-    popen = Popen(cmd, stdout=open(output_file_path, 'a', encoding='utf-8'), stderr=open(error_path, 'a', encoding='utf-8'), universal_newlines=True, shell=True)
+    exe_cmd = f'{cmd} && rm -rf {output_dir_path}' # rsync进程执行成功，删掉中间文件
+    print("exe_cmd", exe_cmd)
+    popen = Popen(exe_cmd, stdout=open(output_file_path, 'a', encoding='utf-8'), stderr=open(error_path, 'a', encoding='utf-8'), universal_newlines=True, shell=True)
 
 def close_process_by_filepath(filepath: str, output_path: str, error_path: str, address: str, user: str):
     '''
@@ -75,14 +90,14 @@ def close_process_by_filepath(filepath: str, output_path: str, error_path: str, 
     process, cmd_info, cmd_raw = find_process(filepath, address, user)
     if process is None or cmd_info is None or cmd_raw is None:
         with open(error_path, 'a', encoding='utf-8') as file_stream:
-            file_stream.write(f'kill transfer ${filepath} error: no process found\n')
+            file_stream.write(f'kill transfer {filepath} error: no process found\n')
         sys.stderr.write(f'kill transfer error: no process found\n')
         sys.stderr.flush()
         sys.exit(-1)
     else:
         process.send_signal(signal.SIGINT)
         with open(output_path, 'a', encoding='utf-8') as file_stream:
-            file_stream.write(f'kill transfer ${filepath} completed\n')
+            file_stream.write(f'kill transfer {filepath} completed\n')
             
         # 判断需不需要重启，如果取消的进程只负责传该单个文件，那么就不需要重启，否则需要重启，并将该文件加入到exclude下
         if cmd_info['src_path'] == filepath: # 取消的进程只负责传输单个文件，那么不需要重启，传输进度中间文件会被scowsync主进程清理
@@ -91,9 +106,9 @@ def close_process_by_filepath(filepath: str, output_path: str, error_path: str, 
             # 在rsync规则中，如果要排除某个文件，需要将其相对路径加入到exclude中，而不能是full_path
             relative_path = os.path.relpath(path=filepath, start=cmd_info['src_path'])
             # 生成唯一的transfer_id
-            raw_string = f"{cmd_info['address']} {cmd_info['user']} {cmd_info['src_path']} {cmd_info['dst_path']} {relative_path}"
+            raw_string = f"{cmd_info['address']} {cmd_info['user']} {cmd_info['src_path']} {cmd_info['dst_path']} --exclude {cmd_info['exclude']} {relative_path}"
             transfer_id = utils.gen_file_transfer_id(raw_string)
-            __restart_rsync(transfer_id, cmd_raw + "--exclude=" + relative_path, cmd_info, error_path)
+            __restart_rsync(transfer_id, cmd_raw + " --exclude=" + relative_path, cmd_info, error_path)
     return 
             
 if __name__ == '__main__':

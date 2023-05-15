@@ -90,11 +90,7 @@ It will return an array of json object like:
 
 ### terminate
 
-You can use the following command to terminate the transfer process. But you should note that the shutdown of the process is at the granularity of the rsync service. 
-
-For example, you are using an rsync service to transfer a folder dir, which consists of file1 and file2. When using `-s --source` as the parameter to terminate the transmission with `-s dir/file1`, it actually closes the transmission of the entire folder dir, which is equivalent to `-s dir`.
-
-To prevent this from happening, please increase `-m --max-depth` when starting `scow-sync-start` transmission to increase the parallel granularity.
+You can use the following command to terminate the transfer process. But you should note that the shutdown of the process is at the granularity of the rsync service. It will then restart the rsync service but with `--exclude` to exclude the files that have been terminated.
 
 ```bash
 scow-sync-terminate [-h] [-a ADDRESS] [-u USER] [-s SOURCE] [-p PORT] [-k SSHKEY_PATH]
