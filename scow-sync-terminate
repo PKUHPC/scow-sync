@@ -3,15 +3,18 @@
 Kill a file transfer
 '''
 import sys
+import os
 import signal
 import psutil
+import utils
 from argsparser import TerminateArgsParser
-from config import LOG_PATH, ERROR_PATH
+from config import LOG_PATH, ERROR_PATH, SCOWSYNC_PATH
+from subprocess import Popen, PIPE
 
 
 def __parse_cmdline(cmdline):
     '''
-    从命令中解析出[user, address, src_path, dst_path]
+    从命令中解析出[user, address, src_path, dst_path, exclude]
     '''
     info = {'user': '', 'address': '', 'src_path': '', 'dst_path': ''}
 
@@ -25,7 +28,6 @@ def __parse_cmdline(cmdline):
             info['dst_path'] = content.split(':')[1]
             # 解析 src_path，即user@addtess:dst_path的前面
             info['src_path'] = cmdline[index - 1]
-            break
 
     return info
 
@@ -35,10 +37,12 @@ def find_process(filepath: str, address: str, user: str):
     1  |——/bin sh -c rsync
     2   |——rsync
     3    |——ssh
-    需要关闭的是2
+    需要关闭的是
+    @return: (进程, 解析后的cmd列表, cmd原始str)
     '''
     rsync_process = None 
     cmd_info = None
+    cmd_raw = None
     for process in psutil.process_iter():
         cmdline = process.cmdline()
         if cmdline[0] != 'rsync':
@@ -46,28 +50,52 @@ def find_process(filepath: str, address: str, user: str):
         else:
             # 检查address, user, src_path是否对的上
             cmd_info = __parse_cmdline(cmdline)
-            if cmd_info['user'] == user and cmd_info['address'] == address and cmd_info['src_path'] in filepath:
+            if cmd_info['user'] == user and cmd_info['address'] == address and cmd_info['src_path'] in filepath: # 注意，这个地方是子集
                 rsync_process = process
+                cmd_raw = ' '.join(cmdline)
                 break
             continue
-    return rsync_process, cmd_info  
+    return rsync_process, cmd_info, cmd_raw
+
+def __restart_rsync(transfer_id, cmd, cmd_info, error_path):
+    '''
+    重启rsync进程
+    '''
+    output_dir_path = os.path.join(SCOWSYNC_PATH, str(transfer_id))
+    output_file_path = os.path.join(output_dir_path, os.path.basename(f"{cmd_info['src_path']}.out"))
+    with open(output_file_path, 'a', encoding='utf-8') as file_stream:
+        # 第一行是关于接收集群和文件（文件夹）的父路径的信息
+            file_stream.write(f"{cmd_info['address']} {os.path.dirname(cmd_info['src_path'])}\n")
+    popen = Popen(cmd, stdout=open(output_file_path, 'a', encoding='utf-8'), stderr=open(error_path, 'a', encoding='utf-8'), universal_newlines=True, shell=True)
 
 def close_process_by_filepath(filepath: str, output_path: str, error_path: str, address: str, user: str):
     '''
     关闭命令中含有该文件路径的进程
     '''
-    process, cmd_info = find_process(filepath, address, user)
-    if process is None:
+    process, cmd_info, cmd_raw = find_process(filepath, address, user)
+    if process is None or cmd_info is None or cmd_raw is None:
         with open(error_path, 'a', encoding='utf-8') as file_stream:
-            file_stream.write(f'kill transfer error: no process found\n')
+            file_stream.write(f'kill transfer ${filepath} error: no process found\n')
         sys.stderr.write(f'kill transfer error: no process found\n')
         sys.stderr.flush()
         sys.exit(-1)
     else:
         process.send_signal(signal.SIGINT)
         with open(output_path, 'a', encoding='utf-8') as file_stream:
-            file_stream.write(f'kill transfer: {cmd_info}\n')
-
+            file_stream.write(f'kill transfer ${filepath} completed\n')
+            
+        # 判断需不需要重启，如果取消的进程只负责传该单个文件，那么就不需要重启，否则需要重启，并将该文件加入到exclude下
+        if cmd_info['src_path'] == filepath: # 取消的进程只负责传输单个文件，那么不需要重启，传输进度中间文件会被scowsync主进程清理
+            return
+        else:
+            # 在rsync规则中，如果要排除某个文件，需要将其相对路径加入到exclude中，而不能是full_path
+            relative_path = os.path.relpath(filepath, cmd_info['src_path'])
+            # 生成唯一的transfer_id
+            raw_string = f"{cmd_info['address']} {cmd_info['user']} {cmd_info['src_path']} {cmd_info['dst_path']} {relative_path}"
+            transfer_id = utils.gen_file_transfer_id(raw_string)
+            __restart_rsync(transfer_id, cmd_raw + "--exclude=" + relative_path, cmd_info, error_path)
+    return 
+            
 if __name__ == '__main__':
 
     # 获取参数
