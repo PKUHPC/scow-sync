@@ -5,8 +5,6 @@ Start a file transfer asynchronously
 import os
 import sys
 from subprocess import PIPE, Popen
-
-import utils
 from argsparser import StartArgsParser
 from config import SCOWSYNC_PATH, LOG_PATH, ERROR_PATH
 
