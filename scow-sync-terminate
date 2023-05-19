@@ -48,7 +48,7 @@ def find_process(filepath: str, address: str, user: str):
     cmd_raw = None
     for process in psutil.process_iter():
         cmdline = process.cmdline()
-        if cmdline[0] != 'rsync':
+        if len(cmdline) == 0 or cmdline[0] != 'rsync':
             continue
         else:
             # 检查address, user, src_path是否对的上
