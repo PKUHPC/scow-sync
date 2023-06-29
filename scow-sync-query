@@ -2,6 +2,7 @@
 '''
 query the progress of file transfered
 '''
+# pylint: disable=C0103
 import json
 import os
 import sys
