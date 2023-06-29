@@ -146,8 +146,7 @@ class ScowSync:
         '''
         run to transfer files
         '''
-        thread_num = min(self.file_queue.add_all_to_queue(
-            self.sourcepath, self.max_depth), THREADS)
+        thread_num = THREADS
 
         self.thread_pool = ThreadPoolExecutor(
             thread_num, thread_name_prefix='scow-sync')
