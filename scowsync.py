@@ -3,6 +3,7 @@ Transfer files from local to remote server on SCOW
 '''
 import os
 import sys
+import shutil
 from concurrent.futures import ThreadPoolExecutor
 from subprocess import Popen, PIPE
 import utils
@@ -62,17 +63,20 @@ class ScowSync:
         count = 0
         file_list = os.listdir(dir_path)
         count = len(file_list)
-        split_element = {'dir_temp_path': dir_path, 'count': count, 'current': 0}
-        self.split_dict.update({filepath: split_element})
+        split_element = {'count': count, 'current': 0}
+        self.split_dict.update({dir_path: split_element})
         return dir_path
 
     # merge files
     def __merge_files(self, dst_temp_file_prefix, dst_file_path):
-        cmd_cat = f'cat {dst_temp_file_prefix}_* > dst_file_path'
+        
+        cmd_cat = f'cat {dst_temp_file_prefix}_* > {dst_file_path}'
+        print("cmd_cat", cmd_cat)
         ssh = SSH(self.address, self.user,
                               self.sshkey_path, self.port)
         ssh.ssh_exe_cmd(cmd_cat)
-        dst_temp_dir_path = os.path.split(dst_temp_file_prefix)[0]
+        
+        dst_temp_dir_path: str = os.path.split(dst_temp_file_prefix)[0]
         cmd_rm = f'rm -rf {dst_temp_dir_path}'
         ssh.ssh_exe_cmd(cmd_rm)
         
@@ -93,24 +97,27 @@ class ScowSync:
         _, stderr = popen.communicate()
         if times < 3:
             if popen.returncode == 255:
-                self.__start_rsync(cmd, src, dst, times+1)
+                self.__start_rsync(cmd, src, dst, times+1, need_merge)
         else:
             if stderr:
                 sys.stderr.write(stderr)
         os.remove(output_file_path)
-        # 对于需要merge的files splitted 
+        # 对于需要merge的files splitted
         if need_merge:
-            # print("llallalala")
             dir_temp_path = os.path.split(src)[0]
             self.split_dict[dir_temp_path]['current'] += 1
             if self.split_dict[dir_temp_path]['current'] == self.split_dict[dir_temp_path]['count']:
                 # 文件前缀
-                dst_temp_file_prefix: str = ''.join(dst.split('_')[:-1])
-                dst_file_dir_path:str = os.path.split(dst)[0] # xxx_sstemp
-                dst_file_dir_path_parts = dst_file_dir_path.split('_')
-                dst_file_path:str = ''.join(dst_file_dir_path_parts[:-1])
+                dst_dir_path, dst_file_name = os.path.split(dst)
+                last_underscore_index = dst_file_name.rfind('_')
+                assert last_underscore_index != -1
+                large_file_name = dst_file_name[:last_underscore_index]
+                dst_temp_file_prefix = os.path.join(dst_dir_path, large_file_name)
+                dst_file_path = os.path.join(os.path.split(dst_dir_path)[0], large_file_name)
                 self.__merge_files(dst_temp_file_prefix, dst_file_path)
                 self.split_dict.pop(dir_temp_path)
+                # 删除本地的
+                shutil.rmtree(dir_temp_path)
         
 
     # transfer single file
@@ -128,7 +135,6 @@ class ScowSync:
             cmd = f'rsync -az --progress -e \'ssh -p {self.port} -i {self.sshkey_path} -o \'LogLevel=QUIET\'\' \
                     {src} {self.user}@{self.address}:{dst} \
                     --partial --inplace'
-        # print(f"cmd:{cmd}")
         self.__start_rsync(cmd, src, dst, 0, need_merge)
         return
 
