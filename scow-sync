@@ -19,7 +19,6 @@ if __name__ == '__main__':
     unique_id = utils.gen_file_transfer_id(raw_string)
     if not os.path.exists(os.path.join(SCOWSYNC_PATH, str(unique_id))):
         os.mkdir(os.path.join(SCOWSYNC_PATH, str(unique_id)), 0o700)
-
     scow = ScowSync(args.address, args.user, args.source, args.destination,
                     args.max_depth, args.port, args.sshkey_path)
     scow.transfer_files()

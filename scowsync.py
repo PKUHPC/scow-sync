@@ -100,6 +100,7 @@ class ScowSync:
         os.remove(output_file_path)
         # 对于需要merge的files splitted 
         if need_merge:
+            # print("llallalala")
             dir_temp_path = os.path.split(src)[0]
             self.split_dict[dir_temp_path]['current'] += 1
             if self.split_dict[dir_temp_path]['current'] == self.split_dict[dir_temp_path]['count']:
@@ -127,6 +128,7 @@ class ScowSync:
             cmd = f'rsync -az --progress -e \'ssh -p {self.port} -i {self.sshkey_path} -o \'LogLevel=QUIET\'\' \
                     {src} {self.user}@{self.address}:{dst} \
                     --partial --inplace'
+        # print(f"cmd:{cmd}")
         self.__start_rsync(cmd, src, dst, 0, need_merge)
         return
 
@@ -147,9 +149,10 @@ class ScowSync:
         run to transfer files
         '''
         thread_num = THREADS
-
         self.thread_pool = ThreadPoolExecutor(
             thread_num, thread_name_prefix='scow-sync')
+        self.file_queue.add_all_to_queue(
+            self.sourcepath, self.max_depth)
         while not self.file_queue.empty():
             entity_file: EntityFile = self.file_queue.get()
             if entity_file.isdir:
@@ -164,15 +167,20 @@ class ScowSync:
                         self.__transfer_dir, entity_file.subpath)
 
             else:
-                file_size = os.path.getsize(entity_file.subpath)
+                file_path = os.path.join(os.path.split(
+                    self.sourcepath)[0], entity_file.subpath)
+                file_size = os.path.getsize(file_path)
                 if file_size >= SPLIT_THRESHOLD and entity_file.depth < self.max_depth:
                     # 需要切分
-                    file_path = os.path.join(os.path.split(
-                        self.sourcepath)[0], entity_file.subpath)
                     temp_dir_path = self.__split_large_file(file_path)
+                    ssh = SSH(self.address, self.user,
+                              self.sshkey_path, self.port)
+                    string_cmd = f'mkdir -p \
+                                 {os.path.join(self.destinationpath, os.path.basename(temp_dir_path))}'
+                    ssh.ssh_exe_cmd(cmd=string_cmd)
                     for file in os.listdir(temp_dir_path):
                         self.thread_pool.submit(
-                            self.__transfer_file, os.path.join(temp_dir_path, file), True)
+                            self.__transfer_file, os.path.join(os.path.basename(temp_dir_path), file), True)
                 else:
                     self.thread_pool.submit(
                         self.__transfer_file, entity_file.subpath)
