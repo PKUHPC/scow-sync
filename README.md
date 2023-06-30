@@ -29,6 +29,12 @@ Edit the `SHEBANG_PATH` to use the interpreter that you want. If you update the 
 
 You'd better edit the `SCOWSYNC_PATH` with `~/` that each user will have his own directory.
 
+#### split large files
+
+Scow-sync will split large files, and then open several TCP connections concurrently to improve transmission performance.
+
+You can edit the `SPLIT_THRESHOLD` and the `SPLIT_CHUNK_SIZE` in the `config.py`
+
 ### start
 
 #### background
