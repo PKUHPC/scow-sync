@@ -4,6 +4,7 @@ Transfer files from local to remote server on SCOW
 import os
 import sys
 import shutil
+import threading
 from concurrent.futures import ThreadPoolExecutor
 from subprocess import Popen, PIPE
 import utils
@@ -18,6 +19,7 @@ class ScowSync:
     '''
 
     def __init__(self, address, user, sourcepath, destinationpath, max_depth, port, sshkey_path):
+        
         self.address = address
         self.user = user
         self.sourcepath = sourcepath
@@ -30,6 +32,7 @@ class ScowSync:
                               ]
         self.file_queue = FileQueue()
         self.split_dict = {}
+        self.split_lock = threading.Lock() # 访问split_dict的互斥锁
         self.thread_pool = None
         self.raw_string = f'{address} {user} {sourcepath} {destinationpath}'
 
@@ -104,9 +107,19 @@ class ScowSync:
         os.remove(output_file_path)
         # 对于需要merge的files splitted
         if need_merge:
+            ended = False
             dir_temp_path = os.path.split(src)[0]
-            self.split_dict[dir_temp_path]['current'] += 1
-            if self.split_dict[dir_temp_path]['current'] == self.split_dict[dir_temp_path]['count']:
+            
+            self.split_lock.acquire()
+            try:
+   
+                self.split_dict[dir_temp_path]['current'] += 1
+                if self.split_dict[dir_temp_path]['current'] == self.split_dict[dir_temp_path]['count']:
+                    ended = True
+            finally:
+                self.split_lock.release()
+                
+            if ended:
                 # 文件前缀
                 dst_dir_path, dst_file_name = os.path.split(dst)
                 last_underscore_index = dst_file_name.rfind('_')
