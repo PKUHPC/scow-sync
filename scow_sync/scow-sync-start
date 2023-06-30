@@ -6,15 +6,13 @@ Start a file transfer asynchronously
 import os
 import sys
 from subprocess import PIPE, Popen
-from argsparser import StartArgsParser
-from config import SCOWSYNC_PATH, LOG_PATH, ERROR_PATH
+from scow_sync import utils, config
 
 if __name__ == '__main__':
 
-    # 获取参数
-    args = StartArgsParser().get_args_parser().parse_args()
+    args = utils.args_parser.start_args_parse()
 
-    # 如果开启了check，则检查是否免密并立刻返回
+    # if check is enabled, check whether password-free and return immediately
     if args.check:
         if not os.path.exists(args.sshkey_path):
             sys.stdout.write('false')
@@ -23,7 +21,7 @@ if __name__ == '__main__':
                 -o PreferredAuthentications=publickey,keyboard-interactive -o PubkeyAuthentication=yes \
                 {args.user}@{args.address} echo hello'
             popen = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
-            # 等待子进程
+            # wait sub process
             stdout, stderr = popen.communicate()
             if not stdout:
                 sys.stdout.write('false')
@@ -36,23 +34,23 @@ if __name__ == '__main__':
                     sys.stdout.write('true')
         sys.exit(0)
 
-    # 初始化保存日志的文件夹
-    if not os.path.exists(SCOWSYNC_PATH):
-        os.makedirs(SCOWSYNC_PATH, 0o700)
-    if not os.path.exists(LOG_PATH):
-        with open(LOG_PATH, 'a', encoding='utf-8') as out:
+    # initialize the folder where the output message are saved
+    if not os.path.exists(config.OUTPUT_PATH):
+        os.makedirs(config.OUTPUT_PATH, 0o700)
+    if not os.path.exists(config.LOG_PATH):
+        with open(config.LOG_PATH, 'a', encoding='utf-8') as out:
             out.write('This is the tranferring log for scow-sync\n')
-        os.chmod(LOG_PATH, 0o700)
-    if not os.path.exists(ERROR_PATH):
-        with open(ERROR_PATH, 'a', encoding='utf-8') as err:
+        os.chmod(config.LOG_PATH, 0o700)
+    if not os.path.exists(config.ERROR_PATH):
+        with open(config.ERROR_PATH, 'a', encoding='utf-8') as err:
             err.write('This is the error log for scow-sync\n')
-        os.chmod(ERROR_PATH, 0o700)
+        os.chmod(config.ERROR_PATH, 0o700)
 
-    # 子进程执行scow-sync
+    # construct sub process to exe scow-sync for background
     cmd = f'scow-sync -a {args.address} -u {args.user} -s {args.source} -d {args.destination} \
         -m {args.max_depth} -p {args.port} -k {args.sshkey_path}'
 
     popen = Popen(cmd, shell=True, stdout=open(
-        LOG_PATH, 'a', encoding='utf-8'), stderr=open(ERROR_PATH, 'a', encoding='utf-8'))
+        config.LOG_PATH, 'a', encoding='utf-8'), stderr=open(config.ERROR_PATH, 'a', encoding='utf-8'))
 
     sys.exit()

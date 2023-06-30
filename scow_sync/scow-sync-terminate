@@ -8,10 +8,7 @@ import os
 import signal
 from subprocess import Popen
 import psutil
-import utils
-from argsparser import TerminateArgsParser
-from config import LOG_PATH, ERROR_PATH, SCOWSYNC_PATH
-
+from scow_sync import utils, config
 
 def __parse_cmdline(cmdline):
     '''
@@ -77,7 +74,7 @@ def __restart_rsync(transfer_id, cmd, cmd_info, error_path):
     '''
     重启rsync进程
     '''
-    output_dir_path = os.path.join(SCOWSYNC_PATH, str(transfer_id))
+    output_dir_path = os.path.join(config.OUTPUT_PATH, str(transfer_id))
     if not os.path.exists(output_dir_path):
         os.mkdir(output_dir_path, 0o700)
     output_file_path = os.path.join(
@@ -134,10 +131,10 @@ def close_process_by_filepath(
 if __name__ == '__main__':
 
     # 获取参数
-    args = TerminateArgsParser().get_args_parser().parse_args()
+    args = utils.args_parser.terminate_args_parse
 
     # 停止进程
     close_process_by_filepath(
-        args.source, LOG_PATH, ERROR_PATH, args.address, args.user)
+        args.source, config.LOG_PATH, config.ERROR_PATH, args.address, args.user)
 
     sys.exit()
