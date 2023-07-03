@@ -1,8 +1,10 @@
+import hashlib
+
 from .args_parser import *
 from .ssh import *
 from .timer import *
 
-import hashlib
+
 
 def gen_file_transfer_id(cmd: str):
     '''
