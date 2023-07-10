@@ -8,8 +8,8 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 from subprocess import Popen, PIPE
 import config
-from scow_sync.utils import ssh, gen_file_transfer_id
-from scow_sync.transfer import files_queue
+from utils import ssh, gen_file_transfer_id
+from transfer import files_queue
 
 
 class FilesTransfer:

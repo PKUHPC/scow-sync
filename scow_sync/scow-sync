@@ -5,8 +5,8 @@ Code entry to run the scow-sync
 # pylint: disable=C0103
 import os
 import config
-from scow_sync.utils import args_parser, gen_file_transfer_id
-from scow_sync.transfer import files_transfer
+from utils import args_parser, gen_file_transfer_id
+from transfer import files_transfer
 
 # ok for file transfer
 if __name__ == '__main__':

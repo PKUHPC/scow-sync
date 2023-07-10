@@ -8,7 +8,7 @@ import os
 import signal
 from subprocess import Popen
 import psutil
-from scow_sync.utils import args_parser, gen_file_transfer_id
+from utils import args_parser, gen_file_transfer_id
 import config
 
 def __parse_cmdline(cmdline):
