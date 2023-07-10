@@ -43,13 +43,13 @@ fi
 # config the shebang
 if [ "$1" = "update" ]; then
     # 读取SHEBANG_PATH变量
-    SHEBANG_PATH=$(python3 -c "from config import SHEBANG_PATH; print(SHEBANG_PATH)")
+    SHEBANG_PATH=$(python3 -c "from scow_sync import config; print(config.SHEBANG_PATH)")
     # 更新scow-sync脚本的shebang行
-    sed -i "1s|.*|#!$SHEBANG_PATH|" scow-sync
+    sed -i "1s|.*|#!$SHEBANG_PATH|" ./scow_sync/scow-sync
     # 更新scow-sync-start脚本的shebang行
-    sed -i "1s|.*|#!$SHEBANG_PATH|" scow-sync-start
+    sed -i "1s|.*|#!$SHEBANG_PATH|" ./scow_sync/scow-sync-start
     # 更新scow-sync-query脚本的shebang行
-    sed -i "1s|.*|#!$SHEBANG_PATH|" scow-sync-query
+    sed -i "1s|.*|#!$SHEBANG_PATH|" ./scow_sync/scow-sync-query
     # 更新scow-sync-terminate脚本的shebang行
-    sed -i "1s|.*|#!$SHEBANG_PATH|" scow-sync-terminate
+    sed -i "1s|.*|#!$SHEBANG_PATH|" ./scow_sync/scow-sync-terminate
 fi
