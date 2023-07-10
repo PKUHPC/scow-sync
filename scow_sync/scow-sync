@@ -4,15 +4,16 @@ Code entry to run the scow-sync
 '''
 # pylint: disable=C0103
 import os
-from scow_sync import utils, config
+import config
+from scow_sync.utils import args_parser, gen_file_transfer_id
 from scow_sync.transfer import files_transfer
 
 # ok for file transfer
 if __name__ == '__main__':
-    args = utils.args_parser.start_args_parse()
+    args = args_parser.start_args_parse()
 
     raw_string = f'{args.address} {args.user} {args.source} {args.destination}'
-    unique_id = utils.gen_file_transfer_id(raw_string)
+    unique_id = gen_file_transfer_id(raw_string)
 
     if not os.path.exists(os.path.join(config.OUTPUT_PATH, str(unique_id))):
         os.mkdir(os.path.join(config.OUTPUT_PATH, str(unique_id)), 0o700)

@@ -7,7 +7,8 @@ import shutil
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from subprocess import Popen, PIPE
-from scow_sync import utils, config
+import config
+from scow_sync.utils import ssh, gen_file_transfer_id
 from scow_sync.transfer import files_queue
 
 
@@ -38,9 +39,9 @@ class FilesTransfer:
         self.thread_pool = None
         # identifies the transfer process
         self.raw_string = f'{address} {user} {src_path} {dst_path}'
-        self.transfer_id = utils.gen_file_transfer_id(self.raw_string)
+        self.transfer_id = gen_file_transfer_id(self.raw_string)
         # ssh
-        self.ssh = utils.SSH(self.address, self.user, self.sshkey_path, self.port)
+        self.ssh = ssh.SSH(self.address, self.user, self.sshkey_path, self.port)
 
     # compress uncompressed files
     def __is_compressed(self, filename) -> bool:

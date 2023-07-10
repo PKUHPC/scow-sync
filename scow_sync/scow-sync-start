@@ -6,11 +6,12 @@ Start a file transfer asynchronously
 import os
 import sys
 from subprocess import PIPE, Popen
-from scow_sync import utils, config
+import config
+from scow_sync.utils import args_parser
 
 if __name__ == '__main__':
 
-    args = utils.args_parser.start_args_parse()
+    args = args_parser.start_args_parse()
 
     # if check is enabled, check whether password-free and return immediately
     if args.check:

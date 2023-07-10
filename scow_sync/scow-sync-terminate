@@ -8,7 +8,8 @@ import os
 import signal
 from subprocess import Popen
 import psutil
-from scow_sync import utils, config
+from scow_sync.utils import args_parser, gen_file_transfer_id
+import config
 
 def __parse_cmdline(cmdline):
     '''
@@ -122,7 +123,7 @@ def close_process_by_filepath(
             # 生成唯一的transfer_id
             # pylint: disable=C0301
             raw_string = f"{cmd_info['address']} {cmd_info['user']} {cmd_info['src_path']} {cmd_info['dst_path']} --exclude {cmd_info['exclude']} {relative_path}"
-            transfer_id = utils.gen_file_transfer_id(raw_string)
+            transfer_id = gen_file_transfer_id(raw_string)
             __restart_rsync(transfer_id, cmd_raw + " --exclude=" +
                             relative_path, cmd_info, error_path)
     return
@@ -131,7 +132,7 @@ def close_process_by_filepath(
 if __name__ == '__main__':
 
     # 获取参数
-    args = utils.args_parser.terminate_args_parse
+    args = args_parser.terminate_args_parse
 
     # 停止进程
     close_process_by_filepath(
