@@ -26,13 +26,14 @@ if [ $# -eq 0 ]; then
 
     # install scow-sync
     local_path=$(pwd)
-    chmod +x $local_path/scow-sync-start
-    chmod +x $local_path/scow-sync-query
-    chmod +x $local_path/scow-sync-terminate
-    ln -s $local_path/scow-sync-start /usr/bin/scow-sync-start # install scow-sync globally by add soft link in /usr/local/bin
-    ln -s $local_path/scow-sync-query /usr/bin/scow-sync-query
-    ln -s $local_path/scow-sync-terminate /usr/bin/scow-sync-terminate
-    ln -s $local_path/scow-sync /usr/bin/scow-sync
+    dir_path=$local_path/scow_sync
+    chmod +x $dir_path/scow-sync-start
+    chmod +x $dir_path/scow-sync-query
+    chmod +x $dir_path/scow-sync-terminate
+    ln -s $dir_path/scow-sync-start /usr/bin/scow-sync-start # install scow-sync globally by add soft link in /usr/local/bin
+    ln -s $dir_path/scow-sync-query /usr/bin/scow-sync-query
+    ln -s $dir_path/scow-sync-terminate /usr/bin/scow-sync-terminate
+    ln -s $dir_path/scow-sync /usr/bin/scow-sync
     chmod +x /usr/bin/scow-sync-start
     chmod +x /usr/bin/scow-sync-query
     chmod +x /usr/bin/scow-sync-terminate
