@@ -6,11 +6,11 @@ if [ $# -eq 0 ]; then
     if [[ -e /etc/os-release ]]; then
         source /etc/os-release
         if [[ $ID == "debian" || $ID == "ubuntu" ]]; then
-            apt-get install -y rsync python3 pip3
+            apt-get install -y rsync
         elif [[ $ID == "centos" || $ID == "rhel" ]]; then
-            yum install -y rsync python3 pip3
+            yum install -y rsync
         elif [[ $ID == "alpine" ]]; then
-            apk add -y rsync python3 pip3
+            apk add -y rsync
         else
             echo "Unsupported Linux distribution"
             exit 1
@@ -19,10 +19,6 @@ if [ $# -eq 0 ]; then
         echo "Unsupported Linux distribution"
         exit 1
     fi
-
-    # install psutil, paramiko
-    pip3 install psutil==5.9.4
-    pip3 install paramiko==3.0.0
 
     # install scow-sync
     local_path=$(pwd)
