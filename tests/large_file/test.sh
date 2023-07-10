@@ -9,6 +9,8 @@ port=2222
 sshkey_path=/home/ljz/.ssh/id_rsa
 
 # 生成大文件
+mkdir recv_files
+mkdir send_files
 file_size=105 #MB # 不小于config.py中的SPLIT_THRESHOLD
 file_path=$source/file_large_1
 
