@@ -79,7 +79,11 @@ class FilesTransfer:
         count = len(file_list)
         # update thread shared dict
         split_element = {'count': count, 'current': 0}
+
+        self.split_lock.acquire()
         self.split_dict.update({temp_dir_path: split_element})
+        self.split_lock.release()
+
         return temp_dir_path
 
     # merge files
@@ -120,7 +124,6 @@ class FilesTransfer:
         if need_merged:
             end = False
             dir_temp_path = os.path.split(src)[0]
-            
             self.split_lock.acquire()
             try:
                 self.split_dict[dir_temp_path]['current'] += 1
@@ -145,7 +148,7 @@ class FilesTransfer:
         
 
     # transfer single file
-    def __transfer_file(self, sub_path, need_merged=False):
+    def __transfer_file(self, sub_path, need_merged=False): # sub_path为相对路径
         print(f'transfering file: {sub_path}')
         cmd = None
 
@@ -199,17 +202,17 @@ class FilesTransfer:
             else:
                 file_full_path = os.path.join(os.path.split(self.src_path)[0], entity_file.sub_path)
                 file_size = os.path.getsize(file_full_path)
-                if file_size >= config.SPLIT_THRESHOLD and entity_file.depth < self.max_depth:
+                if file_size >= config.SPLIT_THRESHOLD and entity_file.depth <= self.max_depth:
                     # split the large file
                     temp_dir_path = self.__split_large_file(file_full_path)
-
+                    
                     cmd_mkdir_split_temp = f'mkdir -p \
                                  {os.path.join(os.path.split(os.path.join(self.dst_path, entity_file.sub_path))[0], os.path.basename(temp_dir_path))}'
                     self.ssh.ssh_exe_cmd(cmd=cmd_mkdir_split_temp)
 
                     for file in os.listdir(temp_dir_path):
                         self.thread_pool.submit(
-                            self.__transfer_file, os.path.join(os.path.basename(temp_dir_path), file), True)
+                            self.__transfer_file, os.path.join(os.path.join(os.path.split(entity_file.sub_path)[0], os.path.split(temp_dir_path)[1]), file), True)
                 else:
                     self.thread_pool.submit(
                         self.__transfer_file, entity_file.sub_path)
