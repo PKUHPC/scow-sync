@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # usage: sudo bash install.sh
-# install rsync, python3, pip3
+# install rsync
 if [ $# -eq 0 ]; then
     if [[ -e /etc/os-release ]]; then
         source /etc/os-release
