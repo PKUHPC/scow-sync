@@ -1,0 +1,23 @@
+#!/usr/bin/python3
+'''
+Code entry to run the scow-sync
+'''
+# pylint: disable=C0103
+import os
+import config
+from utils import args_parser, gen_file_transfer_id
+from transfer import files_transfer
+
+# ok for file transfer
+if __name__ == '__main__':
+    args = args_parser.start_args_parse()
+
+    raw_string = f'{args.address} {args.user} {args.source} {args.destination}'
+    unique_id = gen_file_transfer_id(raw_string)
+
+    if not os.path.exists(os.path.join(config.OUTPUT_PATH, str(unique_id))):
+        os.mkdir(os.path.join(config.OUTPUT_PATH, str(unique_id)), 0o700)
+
+    transferor = files_transfer.FilesTransfer(args.address, args.user, args.source, args.destination,
+                    args.max_depth, args.port, args.sshkey_path)
+    transferor.transfer_files()

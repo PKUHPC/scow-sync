@@ -7,7 +7,7 @@ import json
 import os
 import sys
 from subprocess import PIPE, CalledProcessError, Popen
-from config import SCOWSYNC_PATH
+import config
 
 
 def process_file(file_path):
@@ -31,7 +31,7 @@ def process_file(file_path):
             # stdout: filename\n\r xxx \r xxx \r xxx \r
             if stdout != '':
                 lines = stdout.decode('utf-8')
-                if '%' not in lines:  # 未开始打印进度
+                if '%' not in lines:  # print progress not started
                     return None
 
                 lines_list = lines.split('\n')
@@ -84,7 +84,7 @@ def traverse_folder(folder_path):
 
 if __name__ == '__main__':
 
-    sys.stdout.write(json.dumps(traverse_folder(SCOWSYNC_PATH)))
+    sys.stdout.write(json.dumps(traverse_folder(config.OUTPUT_PATH)))
     sys.stdout.flush()
 
     sys.exit()
