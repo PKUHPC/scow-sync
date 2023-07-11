@@ -4,7 +4,7 @@ address=localhost
 user=ljz
 source=$(pwd)/send_files
 destination=$(pwd)/recv_files
-max_depth=2
+max_depth=0
 port=2222
 sshkey_path=/home/ljz/.ssh/id_rsa
 
