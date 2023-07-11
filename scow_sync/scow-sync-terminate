@@ -59,7 +59,6 @@ def find_process(filepath: str, address: str, user: str):
                     cmd_info['src_path'] in filepath:  # 注意，这个地方是子集
                 rsync_process = process
                 # cmd_raw需要做进一步处理，因为rsync子进程中的ssh -p xx -i xx -o xx 没有加引号需要加引号
-                print(cmdline)
                 for i, element in enumerate(cmdline):
                     context = element
                     if context == '-e':
@@ -85,7 +84,7 @@ def __restart_rsync(transfer_id, cmd, cmd_info, error_path):
         file_stream.write(
             f"{cmd_info['address']} {os.path.dirname(cmd_info['src_path'])}\n")
     exe_cmd = f'{cmd} && rm -rf {output_dir_path}'  # rsync进程执行成功，删掉中间文件
-    print("exe_cmd", exe_cmd)
+    # print("重启rsync", exe_cmd)
     Popen(
         exe_cmd,
         stdout=open(output_file_path, 'a', encoding='utf-8'),
@@ -132,7 +131,7 @@ def close_process_by_filepath(
 if __name__ == '__main__':
 
     # 获取参数
-    args = args_parser.terminate_args_parse
+    args = args_parser.terminate_args_parse()
 
     # 停止进程
     close_process_by_filepath(
