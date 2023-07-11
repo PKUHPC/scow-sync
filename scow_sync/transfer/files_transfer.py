@@ -170,10 +170,10 @@ class FilesTransfer:
         print(f'transfering dir: {sub_path}')
         src = os.path.join(os.path.split(self.src_path)[0], sub_path)
         dst = os.path.join(self.dst_path, os.path.split(sub_path)[0])
+        compress_string = '/'.join(self.compress_list)
         cmd = f'rsync -az --progress  -e \'ssh -p {self.port} -i {self.sshkey_path} -o \'LogLevel=QUIET\'\' \
                 {src} {self.user}@{self.address}:{dst} \
-                --partial --inplace'
-
+                --partial --inplace --skip-compress={compress_string}'
         self.__start_rsync(cmd, src, dst, 0)
         return
 
