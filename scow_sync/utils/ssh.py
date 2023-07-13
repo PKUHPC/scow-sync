@@ -43,7 +43,10 @@ class SSH:
         try:
             self.__login(self.address, self.user, self.sshkey_path, self.port)
             assert self.ssh
-            _, stdout, stderr =  self.ssh.exec_command(cmd)
+            _, stdout, stderr = self.ssh.exec_command(cmd)
+            # 同步，等ssh命令执行完毕
+            stdout.channel.recv_exit_status()
+            stderr.channel.recv_exit_status()
             return self.__log(cmd, stdout, stderr)
         finally:
             self.__close()
