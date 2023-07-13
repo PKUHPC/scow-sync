@@ -90,11 +90,10 @@ class FilesTransfer:
     def __merge_files(self, dst_temp_file_prefix, dst_file_full_path):
         
         cmd_cat = f'cat {dst_temp_file_prefix}_* > {dst_file_full_path}'
-        self.ssh.ssh_exe_cmd(cmd_cat)
+        self.ssh.exec_cmd(cmd_cat)
         
         dst_temp_dir_path: str = os.path.split(dst_temp_file_prefix)[0]
-        cmd_rm = f'rm -rf {dst_temp_dir_path}'
-        self.ssh.ssh_exe_cmd(cmd_rm)
+        self.ssh.delete_dir(dst_temp_dir_path)
         
     # start rsync
     def __start_rsync(self, cmd, src, dst, times, need_merged=False):
@@ -194,7 +193,7 @@ class FilesTransfer:
                 if entity_file.depth < self.max_depth: # mkdir for parallel transfer dir
                     cmd_mkdir = f'mkdir -p \
                                  {os.path.join(self.dst_path, entity_file.sub_path)}'
-                    self.ssh.ssh_exe_cmd(cmd=cmd_mkdir)
+                    self.ssh.exec_cmd(cmd=cmd_mkdir)
                 else:                                   # serial transfer dir
                     self.thread_pool.submit(
                         self.__transfer_dir, entity_file.sub_path)
@@ -203,12 +202,18 @@ class FilesTransfer:
                 file_full_path = os.path.join(os.path.split(self.src_path)[0], entity_file.sub_path)
                 file_size = os.path.getsize(file_full_path)
                 if file_size >= config.SPLIT_THRESHOLD and entity_file.depth <= self.max_depth:
+                    # if the large file has been transferred before, just use the rsync for increasing transfer
+                    dst_path = os.path.join(self.dst_path, entity_file.sub_path)
+                    if self.ssh.exist_file(dst_path):
+                        self.thread_pool.submit(
+                            self.__transfer_file, entity_file.sub_path)
+                        continue
                     # split the large file
                     temp_dir_path = self.__split_large_file(file_full_path)
                     
                     cmd_mkdir_split_temp = f'mkdir -p \
                                  {os.path.join(os.path.split(os.path.join(self.dst_path, entity_file.sub_path))[0], os.path.basename(temp_dir_path))}'
-                    self.ssh.ssh_exe_cmd(cmd=cmd_mkdir_split_temp)
+                    self.ssh.exec_cmd(cmd=cmd_mkdir_split_temp)
 
                     for file in os.listdir(temp_dir_path):
                         self.thread_pool.submit(
