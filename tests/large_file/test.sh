@@ -5,7 +5,7 @@ user=ljz
 source=$(pwd)/send_files
 destination=$(pwd)/recv_files
 max_depth=2
-port=2222
+port=22
 sshkey_path=/home/ljz/.ssh/id_rsa
 
 # delete
