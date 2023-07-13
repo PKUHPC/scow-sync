@@ -2,5 +2,8 @@
     "python.analysis.typeCheckingMode": "basic",
     "python.linting.pycodestyleEnabled": false,
     "python.linting.enabled": false,
-    "python.linting.pylintEnabled": true
+    "python.linting.pylintEnabled": true,
+    "python.analysis.extraPaths": [
+        "./scow_sync"
+    ]
 }
