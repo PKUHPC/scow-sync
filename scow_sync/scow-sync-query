@@ -73,6 +73,9 @@ def traverse_folder(folder_path):
     # pylint: disable=W0612
     for root, dirs, files in os.walk(folder_path):
         for directory in dirs:
+            # 排除ssh连接池文件夹
+            if directory.endswith('_ssh_conn'):
+                continue
             transfer_id = os.path.join(root, directory)
             for file in os.listdir(transfer_id):
                 file_path = os.path.join(transfer_id, file)
