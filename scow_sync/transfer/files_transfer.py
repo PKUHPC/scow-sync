@@ -115,7 +115,6 @@ class FilesTransfer:
         # pylint: disable=W0612
         _, stderr = popen.communicate()
         self.ssh_conn_pool.release_conn(ssh_conn_path)
-        print("i'm flag")
         # try 3 times if failed
         if times < 3:
             if popen.returncode == 255:
