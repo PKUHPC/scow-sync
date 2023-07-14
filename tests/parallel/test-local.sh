@@ -12,7 +12,7 @@ sshkey_path=/home/ljz/.ssh/id_rsa
 # 生成测试文件
 mkdir recv_files
 mkdir send_files
-dd if=/dev/urandom of=$source/file1 bs=1M count=10
+dd if=/dev/urandom of=$source/file1 bs=1M count=20
 cp $source/file1 $source/file2
 mkdir $source/dir1
 cp $source/file1 $source/dir1/file3

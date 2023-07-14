@@ -8,7 +8,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 from subprocess import Popen, PIPE
 import config
-from utils import ssh, gen_file_transfer_id
+from utils import ssh, gen_file_transfer_id, ssh_conn_pool
 from transfer import files_queue
 
 
@@ -42,6 +42,10 @@ class FilesTransfer:
         self.transfer_id = gen_file_transfer_id(self.raw_string)
         # ssh
         self.ssh = ssh.SSH(self.address, self.user, self.sshkey_path, self.port)
+        # ssh connect pool
+        self.ssh_conn_pool = ssh_conn_pool.SshConnectionPool(address, port, user, sshkey_path, 
+                                                             conn_path=os.path.join(config.OUTPUT_PATH, f'{self.transfer_id}_ssh_conn'), 
+                                                             conn_count=config.THREADS)
 
     # compress uncompressed files
     def __is_compressed(self, filename) -> bool:
@@ -96,7 +100,7 @@ class FilesTransfer:
         self.ssh.delete_dir(dst_temp_dir_path)
         
     # start rsync
-    def __start_rsync(self, cmd, src, dst, times, need_merged=False):
+    def __start_rsync(self, cmd, src, dst, times, ssh_conn_path, need_merged=False):
         output_dir_path = os.path.join(
             self.output_path, str(self.transfer_id))
         output_file_path = os.path.join(
@@ -110,10 +114,12 @@ class FilesTransfer:
 
         # pylint: disable=W0612
         _, stderr = popen.communicate()
+        self.ssh_conn_pool.release_conn(ssh_conn_path)
+        print("i'm flag")
         # try 3 times if failed
         if times < 3:
             if popen.returncode == 255:
-                self.__start_rsync(cmd, src, dst, times+1, need_merged)
+                self.__start_rsync(cmd, src, dst, times+1, ssh_conn_path, need_merged)
         else:
             if stderr:
                 sys.stderr.write(stderr)
@@ -150,18 +156,20 @@ class FilesTransfer:
     def __transfer_file(self, sub_path, need_merged=False): # sub_path为相对路径
         print(f'transfering file: {sub_path}')
         cmd = None
-
         src = os.path.join(os.path.split(self.src_path)[0], sub_path)
         dst = os.path.join(self.dst_path, sub_path)
+
+        ssh_conn_path = self.ssh_conn_pool.get_conn()
+
         if self.__is_compressed(sub_path):
-            cmd = f'rsync -a --progress -e \'ssh -p {self.port} -i {self.sshkey_path} -o \'LogLevel=QUIET\'\' \
+            cmd = f'rsync -a --progress -e \'ssh -S {ssh_conn_path} -o \'LogLevel=QUIET\'\' \
                     {src} {self.user}@{self.address}:{dst} \
                     --partial --inplace'
         else:
-            cmd = f'rsync -az --progress -e \'ssh -p {self.port} -i {self.sshkey_path} -o \'LogLevel=QUIET\'\' \
+            cmd = f'rsync -az --progress -e \'ssh -S {ssh_conn_path} -o \'LogLevel=QUIET\'\' \
                     {src} {self.user}@{self.address}:{dst} \
                     --partial --inplace'
-        self.__start_rsync(cmd, src, dst, 0, need_merged)
+        self.__start_rsync(cmd, src, dst, 0, ssh_conn_path, need_merged)
         return
 
     # transfer directory serial
@@ -169,11 +177,15 @@ class FilesTransfer:
         print(f'transfering dir: {sub_path}')
         src = os.path.join(os.path.split(self.src_path)[0], sub_path)
         dst = os.path.join(self.dst_path, os.path.split(sub_path)[0])
+
         compress_string = '/'.join(self.compress_list)
-        cmd = f'rsync -az --progress  -e \'ssh -p {self.port} -i {self.sshkey_path} -o \'LogLevel=QUIET\'\' \
+
+        ssh_conn_path = self.ssh_conn_pool.get_conn()
+
+        cmd = f'rsync -az --progress  -e \'ssh -S {ssh_conn_path} -o \'LogLevel=QUIET\'\' \
                 {src} {self.user}@{self.address}:{dst} \
                 --partial --inplace --skip-compress={compress_string}'
-        self.__start_rsync(cmd, src, dst, 0)
+        self.__start_rsync(cmd, src, dst, 0, ssh_conn_path)
         return
 
     def transfer_files(self):
@@ -183,7 +195,8 @@ class FilesTransfer:
         thread_num = config.THREADS
         self.thread_pool = ThreadPoolExecutor(
             thread_num, thread_name_prefix='scow-sync')
-        
+        self.ssh_conn_pool.initialize_pool()
+
         self.file_queue.add_all_to_queue(
             self.src_path, self.max_depth)
         
@@ -222,6 +235,7 @@ class FilesTransfer:
                     self.thread_pool.submit(
                         self.__transfer_file, entity_file.sub_path)
         self.thread_pool.shutdown()
+        self.ssh_conn_pool.destroy_pool()
         
         # delete the output dir
         os.rmdir(os.path.join(self.output_path, str(self.transfer_id)))
