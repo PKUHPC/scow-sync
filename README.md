@@ -103,12 +103,11 @@ Optional arguments:
 
 ### parallel
 
-The size of each file is 20MB
+The bandwidth of the network environment is 100Mbps, and the delay is 50ms.
+
+The size of each file is 20MB in multiple files.
+
 ![Performance Test](static/Performance.png "Performance Test")
-
-### large file
-
-![Large File Test](static/LargeFile.png "Large File Test")
 
 ### dynamic compress
 
