@@ -103,8 +103,9 @@ class FilesTransfer:
     def __start_rsync(self, cmd, src, dst, times, ssh_conn_path, need_merged=False):
         output_dir_path = os.path.join(
             self.output_path, str(self.transfer_id))
+        src_id = gen_file_transfer_id(src)
         output_file_path = os.path.join(
-            output_dir_path, f'{os.path.basename(src)}.out')
+            output_dir_path, f'{src_id}.out')
         
         with open(output_file_path, 'a', encoding='utf-8') as file_stream:
             # The first line is information about the receiver and the parent path of the file (folder)
