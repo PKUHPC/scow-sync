@@ -164,11 +164,11 @@ class FilesTransfer:
         if self.__is_compressed(sub_path):
             cmd = f'rsync -a --progress -e \'ssh -S {ssh_conn_path} -o \'LogLevel=QUIET\'\' \
                     {src} {self.user}@{self.address}:{dst} \
-                    --partial --inplace'
+                    --partial --inplace --ignore-times'
         else:
             cmd = f'rsync -az --progress -e \'ssh -S {ssh_conn_path} -o \'LogLevel=QUIET\'\' \
                     {src} {self.user}@{self.address}:{dst} \
-                    --partial --inplace'
+                    --partial --inplace --ignore-times'
         self.__start_rsync(cmd, src, dst, 0, ssh_conn_path, need_merged)
         return
 
@@ -184,7 +184,7 @@ class FilesTransfer:
 
         cmd = f'rsync -az --progress  -e \'ssh -S {ssh_conn_path} -o \'LogLevel=QUIET\'\' \
                 {src} {self.user}@{self.address}:{dst} \
-                --partial --inplace --skip-compress={compress_string}'
+                --partial --inplace --ignore-times --skip-compress={compress_string}'
         self.__start_rsync(cmd, src, dst, 0, ssh_conn_path)
         return
 
