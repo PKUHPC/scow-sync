@@ -15,24 +15,41 @@ def __parse_cmdline(cmdline):
     '''
     从命令中解析出[user, address, src_path, dst_path, exclude]
     '''
-    info = {'user': '', 'address': '',
-            'src_path': '', 'dst_path': '', 'exclude': ''}
+    info = {'user': '', 'address': '', 'src_path': '', 'dst_path': '', 'exclude': ''}
 
-    # pylint: disable=C0200
     for index in range(len(cmdline)):
         content = cmdline[index]
-        # 解析 user@addtess:dst_path
+        # 解析 user@address:dst_path
         if '@' in content and ':' in content:
-            info['user'] = content.split('@')[0]
-            info['address'] = content.split('@')[1].split(':')[0]
-            info['dst_path'] = content.split(':')[1]
-            # 解析 src_path，即user@addtess:dst_path的前面
-            info['src_path'] = cmdline[index - 1]
-        # 解析exclude
+            # 先拆分 '@'，然后检查拆分后的列表长度是否足够
+            user_address = content.split('@')
+            if len(user_address) > 1:
+                info['user'] = user_address[0]
+                address_path = user_address[1].split(':')
+                if len(address_path) > 1:
+                    info['address'] = address_path[0]
+                    info['dst_path'] = address_path[1]
+                else:
+                    sys.stderr.write(f"Error: Incomplete address or path in content: {content}\n")
+                    sys.stderr.flush()
+            else:
+                sys.stderr.write(f"Error: Invalid user@address format in content: {content}\n")
+                sys.stderr.flush()
+
+            # 解析 src_path，即 user@address:dst_path 的前面一个参数
+            if index - 1 >= 0:  # 确保 index-1 不会导致负索引访问错误
+                info['src_path'] = cmdline[index - 1]
+
+        # 解析 exclude
         if content == '--exclude':
-            info['exclude'] += f'{cmdline[index + 1]} '
+            if index + 1 < len(cmdline):  # 确保 index+1 不会超出列表范围
+                info['exclude'] += f'{cmdline[index + 1]} '
+            else:
+                sys.stderr.write("Error: --exclude option provided without a following path.\n")
+                sys.stderr.flush()
 
     return info
+
 
 
 def find_process(filepath: str, address: str, user: str):
@@ -62,9 +79,12 @@ def find_process(filepath: str, address: str, user: str):
                 for i, element in enumerate(cmdline):
                     context = element
                     if context == '-e':
-                        cmdline[i + 1] = f"\'{cmdline[i + 1]}\'"
-                        continue
-                cmd_raw = ' '.join(cmdline)
+                        if i + 1 < len(cmdline):  # 检查 i + 1 是否超出范围
+                            cmdline[i + 1] = f"\'{cmdline[i + 1]}\'"
+                        else:
+                            sys.stderr.write("Error: -e option provided without a following command.\n")
+                            sys.stderr.flush()
+                            continue
                 break
             continue
     return rsync_process, cmd_info, cmd_raw
@@ -72,60 +92,120 @@ def find_process(filepath: str, address: str, user: str):
 
 def __restart_rsync(transfer_id, cmd, cmd_info, error_path):
     '''
-    重启rsync进程
+    重启 rsync 进程
     '''
     output_dir_path = os.path.join(config.OUTPUT_PATH, str(transfer_id))
+
+    # 检查并创建输出目录
     if not os.path.exists(output_dir_path):
-        os.mkdir(output_dir_path, 0o700)
-    output_file_path = os.path.join(
-        output_dir_path, os.path.basename(f"{cmd_info['src_path']}.out"))
-    with open(output_file_path, 'a', encoding='utf-8') as file_stream:
-        # 第一行是关于接收集群和文件（文件夹）的父路径的信息
-        file_stream.write(
-            f"{cmd_info['address']} {os.path.dirname(cmd_info['src_path'])}\n")
-    exe_cmd = f'{cmd} && rm -rf {output_dir_path}'  # rsync进程执行成功，删掉中间文件
-    # print("重启rsync", exe_cmd)
-    Popen(
-        exe_cmd,
-        stdout=open(output_file_path, 'a', encoding='utf-8'),
-        stderr=open(error_path, 'a', encoding='utf-8'),
-        universal_newlines=True,
-        shell=True
-    )
+        try:
+            os.mkdir(output_dir_path, 0o700)
+        except OSError as e:
+            sys.stderr.write(f"Error creating directory {output_dir_path}: {e}\n")
+            sys.stderr.flush()
+            return  # 如果无法创建目录，则终止函数
+
+    output_file_path = os.path.join(output_dir_path, os.path.basename(f"{cmd_info['src_path']}.out"))
+
+    try:
+        with open(output_file_path, 'a', encoding='utf-8') as file_stream:
+            # 第一行是关于接收集群和文件（文件夹）父路径的信息
+            file_stream.write(f"{cmd_info['address']} {os.path.dirname(cmd_info['src_path'])}\n")
+    except IOError as e:
+        sys.stderr.write(f"Error opening file {output_file_path} for writing: {e}\n")
+        sys.stderr.flush()
+        return  # 如果无法打开文件，则终止函数
+
+    # 准备执行 rsync 命令，并确保在成功后删除中间文件
+    exe_cmd = f'{cmd} && rm -rf {output_dir_path}'
+
+    try:
+        # 启动 rsync 进程
+        Popen(
+            exe_cmd,
+            stdout=open(output_file_path, 'a', encoding='utf-8'),
+            stderr=open(error_path, 'a', encoding='utf-8'),
+            universal_newlines=True,
+            shell=True
+        )
+    except Exception as e:
+        sys.stderr.write(f"Error starting rsync process: {e}\n")
+        sys.stderr.flush()
+        return  # 如果进程启动失败，则终止函数
 
 
-def close_process_by_filepath(
-        filepath: str, output_path: str, error_path: str, address: str, user: str):
+def close_process_by_filepath(filepath: str, output_path: str, error_path: str, address: str, user: str):
     '''
-    关闭命令中含有该文件路径的进程
+    关闭命令中含有该文件路径的进程，并根据需要重启 rsync 进程。
     '''
     process, cmd_info, cmd_raw = find_process(filepath, address, user)
+
     if process is None or cmd_info is None or cmd_raw is None:
-        with open(error_path, 'a', encoding='utf-8') as file_stream:
-            file_stream.write(
-                f'kill transfer {filepath} error: no process found\n')
-        sys.stderr.write('kill transfer error: no process found\n')
+        error_message = f'Kill transfer {filepath} error: no process found\n'
+        try:
+            with open(error_path, 'a', encoding='utf-8') as file_stream:
+                file_stream.write(error_message)
+        except IOError as e:
+            sys.stderr.write(f"Error writing to error log {error_path}: {e}\n")
+            sys.stderr.flush()
+
+        sys.stderr.write(error_message)
         sys.stderr.flush()
         sys.exit(-1)
     else:
-        process.send_signal(signal.SIGINT)
-        with open(output_path, 'a', encoding='utf-8') as file_stream:
-            file_stream.write(f'kill transfer {filepath} completed\n')
+        try:
+            process.send_signal(signal.SIGINT)  # 发送 SIGINT 信号终止进程
+        except psutil.NoSuchProcess:
+            error_message = f'Error: process {process.pid} does not exist.\n'
+            try:
+                with open(error_path, 'a', encoding='utf-8') as file_stream:
+                    file_stream.write(error_message)
+            except IOError as e:
+                sys.stderr.write(f"Error writing to error log {error_path}: {e}\n")
+                sys.stderr.flush()
 
-        # 判断需不需要重启，如果取消的进程只负责传该单个文件，那么就不需要重启，否则需要重启，并将该文件加入到exclude下
-        if cmd_info['src_path'] == filepath:  # 取消的进程只负责传输单个文件，那么不需要重启，传输进度中间文件会被scowsync主进程清理
+            sys.stderr.write(error_message)
+            sys.stderr.flush()
+            return
+        except Exception as e:
+            error_message = f'Error sending signal to process {process.pid}: {e}\n'
+            try:
+                with open(error_path, 'a', encoding='utf-8') as file_stream:
+                    file_stream.write(error_message)
+            except IOError as e:
+                sys.stderr.write(f"Error writing to error log {error_path}: {e}\n")
+                sys.stderr.flush()
+
+            sys.stderr.write(error_message)
+            sys.stderr.flush()
+            return
+
+        # 成功终止进程后记录日志
+        success_message = f'Kill transfer {filepath} completed\n'
+        try:
+            with open(output_path, 'a', encoding='utf-8') as file_stream:
+                file_stream.write(success_message)
+        except IOError as e:
+            sys.stderr.write(f"Error writing to output log {output_path}: {e}\n")
+            sys.stderr.flush()
+
+        # 判断需不需要重启 rsync 进程
+        if cmd_info['src_path'] == filepath:
+            # 如果取消的进程只负责传输该单个文件，不需要重启
             return
         else:
-            # 在rsync规则中，如果要排除某个文件，需要将其相对路径加入到exclude中，而不能是full_path
-            relative_path = os.path.relpath(
-                path=filepath, start=cmd_info['src_path'])
-            # 生成唯一的transfer_id
-            # pylint: disable=C0301
+            # 在 rsync 规则中，需要将相对路径加入到 exclude 中
+            relative_path = os.path.relpath(path=filepath, start=cmd_info['src_path'])
+
+            # 生成唯一的 transfer_id
             raw_string = f"{cmd_info['address']} {cmd_info['user']} {cmd_info['src_path']} {cmd_info['dst_path']} --exclude {cmd_info['exclude']} {relative_path}"
             transfer_id = gen_file_transfer_id(raw_string)
-            __restart_rsync(transfer_id, cmd_raw + " --exclude=" +
-                            relative_path, cmd_info, error_path)
+
+            # 重启 rsync 进程并排除指定的文件
+            __restart_rsync(transfer_id, cmd_raw + " --exclude=" + relative_path, cmd_info, error_path)
+
     return
+
 
 
 if __name__ == '__main__':

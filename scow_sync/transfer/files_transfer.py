@@ -69,24 +69,23 @@ class FilesTransfer:
         file_name = os.path.basename(file_full_path)
 
         cmd = f'split -b {config.SPLIT_CHUNK_SIZE}M {file_full_path} {temp_dir_path}/{file_name}_'
-        popen = Popen(cmd, stderr=PIPE, universal_newlines=True, shell=True)
-
-        _, stderr = popen.communicate()
-
-        if stderr:
-            sys.stderr.write(stderr)
-            return None  # type: ignore
+        try:
+            popen = Popen(cmd, stderr=PIPE, universal_newlines=True, shell=True)
+            _, stderr = popen.communicate()
+            if stderr:
+                raise RuntimeError(f"Error splitting file {file_full_path}: {stderr}")
+        except Exception as e:
+            sys.stderr.write(str(e))
+            return None
         
         # compute num of sub files
-        count = 0
         file_list = os.listdir(temp_dir_path)
         count = len(file_list)
         # update thread shared dict
         split_element = {'count': count, 'current': 0}
-
-        self.split_lock.acquire()
-        self.split_dict.update({temp_dir_path: split_element})
-        self.split_lock.release()
+        
+        with self.split_lock:
+            self.split_dict.update({temp_dir_path: split_element})
 
         return temp_dir_path
 
@@ -110,32 +109,32 @@ class FilesTransfer:
         with open(output_file_path, 'a', encoding='utf-8') as file_stream:
             # The first line is information about the receiver and the parent path of the file (folder)
             file_stream.write(f'{self.address} {os.path.dirname(src)}\n')
-        popen = Popen(cmd, stdout=open(output_file_path, 'a', encoding='utf-8'),
-                      stderr=PIPE, universal_newlines=True, shell=True)
 
-        # pylint: disable=W0612
-        _, stderr = popen.communicate()
-        self.ssh_conn_pool.release_conn(ssh_conn_path)
-        # try 3 times if failed
-        if times < 3:
-            if popen.returncode == 255:
-                self.__start_rsync(cmd, src, dst, times+1, ssh_conn_path, need_merged)
-        else:
+        try:
+            popen = Popen(cmd, stdout=open(output_file_path, 'a', encoding='utf-8'),
+                          stderr=PIPE, universal_newlines=True, shell=True)
+            # pylint: disable=W0612
+            _, stderr = popen.communicate()
+
             if stderr:
-                sys.stderr.write(stderr)
-        os.remove(output_file_path)
+                if times < 3 and popen.returncode == 255:
+                    self.__start_rsync(cmd, src, dst, times+1, ssh_conn_path, need_merged)
+                else:
+                    raise RuntimeError(f"Rsync failed after 3 attempts for {src} to {dst}")
+        except Exception as e:
+            sys.stderr.write(str(e))
+        finally:
+            os.remove(output_file_path)
+            self.ssh_conn_pool.release_conn(ssh_conn_path)
 
         # for sub files splited
         if need_merged:
             end = False
             dir_temp_path = os.path.split(src)[0]
-            self.split_lock.acquire()
-            try:
+            with self.split_lock:  # 使用 with 语句简化锁管理
                 self.split_dict[dir_temp_path]['current'] += 1
                 if self.split_dict[dir_temp_path]['current'] == self.split_dict[dir_temp_path]['count']:
                     end = True
-            finally:
-                self.split_lock.release()
                 
             if end:
                 # construct the common prefix of sub files

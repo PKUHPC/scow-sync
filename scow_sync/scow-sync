@@ -10,11 +10,13 @@ from transfer import files_transfer
 
 # ok for file transfer
 if __name__ == '__main__':
+    # 解析命令行参数
     args = args_parser.start_args_parse()
 
     raw_string = f'{args.address} {args.user} {args.source} {args.destination}'
     unique_id = gen_file_transfer_id(raw_string)
 
+    # 如果输出目录中不存在与唯一标识符对应的目录，则创建该目录
     if not os.path.exists(os.path.join(config.OUTPUT_PATH, str(unique_id))):
         os.mkdir(os.path.join(config.OUTPUT_PATH, str(unique_id)), 0o700)
 

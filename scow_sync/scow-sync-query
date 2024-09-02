@@ -6,8 +6,8 @@ query the progress of file transfered
 import json
 import os
 import sys
-from subprocess import PIPE, CalledProcessError, Popen
 import config
+from utils import read_file
 
 
 def process_file(file_path):
@@ -16,42 +16,42 @@ def process_file(file_path):
     '''
     if os.path.exists(file_path):
         try:
-            tail_progress = Popen(
-                ['tail', '-n', '2', file_path], stdout=PIPE, stderr=PIPE)
-            stdout, stderr = tail_progress.communicate()
+            # 使用自定义函数读取文件头和尾
+            file_tail = read_file.read_tail(file_path, 2)
+            file_head = read_file.read_head(file_path, 1)
 
-            head_progress = Popen(
-                ['head', '-n', '1', file_path], stdout=PIPE, stderr=PIPE)
-            # pylint: disable=W0612
-            stdout_head, stderr_head = head_progress.communicate()
-
-            sys.stderr.write(stderr.decode('utf-8'))
-            sys.stderr.flush()
-
-            # stdout: filename\n\r xxx \r xxx \r xxx \r
-            if stdout != '':
-                lines = stdout.decode('utf-8')
-                if '%' not in lines:  # print progress not started
+            # 判断数据合法性，并计算传输进度
+            # filename\n\r xxx \r xxx \r xxx \r
+            if file_tail:
+                tail_lines = file_tail.split('\n')
+                if '%' not in file_tail:  # 如果没有百分比，表示进度未开始
                     return None
 
-                lines_list = lines.split('\n')
+                if len(tail_lines) < 2:
+                    return None
 
-                base_name = lines_list[0]
+                base_name = tail_lines[0]
 
                 recv_address = ''
                 father_path = ''
-                if stdout_head != '':
-                    head_lines = stdout_head.decode('utf-8')
-                    head_lines_list = head_lines.split()
-                    recv_address = head_lines_list[0]
-                    father_path = head_lines_list[1]
+                if file_head:
+                    head_lines = file_head.split()
+                    if len(head_lines) >= 2:
+                        recv_address = head_lines[0]
+                        father_path = head_lines[1]
+                    else:
+                        return None  # 数据不完整，返回 None
 
-                progress_parts = lines_list[1].split('\r')[-1].split()
+                progress_parts = tail_lines[1].split('\r')[-1].split()
+                if len(progress_parts) < 4:
+                    return None  # 数据不完整，返回 None
+
                 file_path = os.path.join(father_path, base_name)
                 transfer_size = progress_parts[0]
                 transfer_progress = progress_parts[1]
                 speed = progress_parts[2]
                 time = progress_parts[3]
+
                 return {"recvAddress": recv_address,
                         "filePath": file_path, 
                         "transferSize": transfer_size, 
@@ -61,7 +61,8 @@ def process_file(file_path):
                         }
             else:
                 return None
-        except CalledProcessError:
+        except Exception as e:
+            sys.stderr.write(f"Error processing file: {e}\n")
             return None
 
 
@@ -71,23 +72,39 @@ def traverse_folder(folder_path):
     '''
     progresses = []
     # pylint: disable=W0612
+    # 遍历文件夹及其子文件夹
     for root, dirs, files in os.walk(folder_path):
         for directory in dirs:
-            # 排除ssh连接池文件夹
+            # 排除以 _ssh_conn 结尾的文件夹（通常是SSH连接池文件夹）
             if directory.endswith('_ssh_conn'):
                 continue
+
+            # 构建传输ID，可以理解为文件父目录的路径
             transfer_id = os.path.join(root, directory)
+
+            # 遍历传输ID下的所有文件
             for file in os.listdir(transfer_id):
+                # 构建文件的完整路径
                 file_path = os.path.join(transfer_id, file)
+
+                # 调用 process_file 函数处理文件，获取进度信息
                 progress_info = process_file(file_path)
+
+                # 如果进度信息存在，则添加到 progresses 列表中
                 if progress_info:
                     progresses.append(progress_info)
+
+    # 返回所有符合条件文件的进度信息列表
     return progresses
 
 
 if __name__ == '__main__':
 
-    sys.stdout.write(json.dumps(traverse_folder(config.OUTPUT_PATH)))
+    # 调用 traverse_folder 函数，传入配置中的输出路径
+    data = traverse_folder(config.OUTPUT_PATH)
+
+    # 将获取到的数据列表打印到标准输出
+    sys.stdout.write(json.dumps(data))
     sys.stdout.flush()
 
     sys.exit()
