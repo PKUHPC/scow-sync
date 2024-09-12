@@ -109,12 +109,14 @@ class FilesTransfer:
         with open(output_file_path, 'a', encoding='utf-8') as file_stream:
             # The first line is information about the receiver and the parent path of the file (folder)
             file_stream.write(f'{self.address} {os.path.dirname(src)}\n')
+            print(f'write {output_file_path}, {self.address} {os.path.dirname(src)}')
 
         try:
             popen = Popen(cmd, stdout=open(output_file_path, 'a', encoding='utf-8'),
                           stderr=PIPE, universal_newlines=True, shell=True)
             # pylint: disable=W0612
-            _, stderr = popen.communicate()
+            stdout, stderr = popen.communicate()
+            print(f'cmd {cmd}, out: {stdout}, err: {stderr}')
 
             if stderr:
                 if times < 3 and popen.returncode == 255:
@@ -131,10 +133,13 @@ class FilesTransfer:
         if need_merged:
             end = False
             dir_temp_path = os.path.split(src)[0]
-            with self.split_lock:  # 使用 with 语句简化锁管理
+            self.split_lock.acquire()
+            try:
                 self.split_dict[dir_temp_path]['current'] += 1
                 if self.split_dict[dir_temp_path]['current'] == self.split_dict[dir_temp_path]['count']:
                     end = True
+            finally:
+                self.split_lock.release()
                 
             if end:
                 # construct the common prefix of sub files
@@ -168,6 +173,7 @@ class FilesTransfer:
             cmd = f'rsync -az --progress -e \'ssh -S {ssh_conn_path} -o \'LogLevel=QUIET\'\' \
                     {src} {self.user}@{self.address}:{dst} \
                     --partial --inplace --ignore-times'
+        print(f'cmd: {cmd}')
         self.__start_rsync(cmd, src, dst, 0, ssh_conn_path, need_merged)
         return
 
